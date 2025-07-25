@@ -1,9 +1,9 @@
 import App from "./app";
 
 const main = () => {
-    const server = new App();
+  const server = new App();
 
-    server.start();
-}
+  server.start();
+};
 
 main();
