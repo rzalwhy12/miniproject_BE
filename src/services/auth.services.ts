@@ -11,6 +11,12 @@ class AuthServices {
         password: await hashPassword(dataSignUp.password),
         referralCode: generateReferralCode(),
       },
+      omit: {
+        password: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
     return newUser;
   };
