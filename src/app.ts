@@ -4,6 +4,8 @@ import cors from "cors";
 import express, { Application, NextFunction, Request, Response } from "express";
 import AuthRouter from "./routers/auth.router";
 import AppError from "./errors/AppError";
+import { StatusCode } from "./constants/statusCode.enum";
+import { ErrorMsg } from "./constants/errorMessage.enum";
 
 const PORT: string = process.env.PORT || "8181";
 
@@ -32,28 +34,28 @@ class App {
 
     //erorr buat jika route tidak ketemu
     this.app.use((req: Request, res: Response, next: NextFunction) => {
-      next(new AppError("route not found", 404));
+      next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
     });
   };
 
   private errorHandler = (): void => {
     this.app.use(
       //express tau kalo ini error handler dari 4 parameter ini error,req,res,next
-      (error: any, req: Request, res: Response, next: NextFunction) => {
+      (error: unknown, req: Request, res: Response, next: NextFunction) => {
         console.error(error);
 
         //handle erorr dari app error
         if (error instanceof AppError) {
-          return res.status(error.rc).send({
+          return res.status(error.rc).json({
             success: error.success,
             message: error.message,
+            arrVallidationErr: error.arrValidationErr,
           });
         }
-
         //error lain
-        return res.status(500).send({
+        return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
           success: false,
-          message: "internal server error",
+          message: ErrorMsg.INTERNAL_SERVER_ERROR,
         });
       }
     );

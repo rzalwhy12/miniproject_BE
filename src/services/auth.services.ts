@@ -14,6 +14,28 @@ class AuthServices {
     });
     return newUser;
   };
+
+  //live isexist email dan username service
+  public isEmailExist = async (email: string) => {
+    const isExist: boolean =
+      (await prisma.user.findUnique({
+        where: {
+          email,
+        },
+      })) !== null;
+    return isExist;
+  };
+
+  public isUsernameExist = async (username: string) => {
+    const isExist: boolean =
+      (await prisma.user.findUnique({
+        where: {
+          username,
+        },
+      })) !== null;
+
+    return isExist;
+  };
 }
 
 export default AuthServices;
