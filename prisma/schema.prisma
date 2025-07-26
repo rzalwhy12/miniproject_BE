@@ -22,10 +22,11 @@ model User {
   password     String
   name         String
   noTlp        String?
-  tanggalLahir DateTime
-  jenisKelamin Gender
+  brithDate    DateTime
+  gender       Gender
   role         Role     @default(CUSTOMER)
   referralCode String   @unique //nanti baut fungsi generate refferalcode
+  isVerified   Boolean  @default(false)
   profileImage String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
