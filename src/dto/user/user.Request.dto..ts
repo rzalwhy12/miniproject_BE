@@ -1,11 +1,10 @@
-import { Gender } from "../../prisma/generated/client";
+import { Gender } from "../../../prisma/generated/client";
 
-export interface ISignUpInput {
+export interface IUserSignUpDTO {
   name: string;
   username: string;
   email: string;
   password: string;
-  noTlp: string;
   brithDate: Date;
   gender: Gender;
 }

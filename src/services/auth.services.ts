@@ -1,26 +1,19 @@
 import { prisma } from "../config/prisma";
 import { hashPassword } from "../utils/hash";
 import { generateReferralCode } from "../utils/generateReferralCode";
-import { ISignUpInput } from "../types/signUp.type";
+import { IUserSignUpDTO } from "../dto/user/user.Request.dto.";
 
 class AuthServices {
-  public signUp = async (dataSignUp: ISignUpInput) => {
+  public signUp = async (dataSignUp: IUserSignUpDTO) => {
     const newUser = await prisma.user.create({
       data: {
         ...dataSignUp,
         password: await hashPassword(dataSignUp.password),
         referralCode: generateReferralCode(),
       },
-      omit: {
-        password: true,
-        isVerified: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
     return newUser;
   };
-
   //live isexist email dan username service
   public isEmailExist = async (email: string) => {
     const isExist: boolean =

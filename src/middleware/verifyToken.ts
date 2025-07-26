@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import AppError from "../errors/AppError";
 import { verify } from "jsonwebtoken";
+import { ErrorMsg } from "../constants/errorMessage.enum";
+import { StatusCode } from "../constants/statusCode.enum";
 
 export const verifyToken = (
   req: Request,
@@ -10,20 +12,24 @@ export const verifyToken = (
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new AppError("no token provided", 401);
+      throw new AppError(ErrorMsg.TOKEN_NOT_PROVIDED, StatusCode.UNAUTHORIZED);
     }
 
     const token = authHeader.split(" ")[1];
 
     if (!token) {
-      throw new AppError("token not found", 401); //401 masalah autentikasi
+      throw new AppError(ErrorMsg.TOKEN_NOT_FOUND, StatusCode.UNAUTHORIZED);
     }
     if (!process.env.TOKEN_KEY) {
-      throw new AppError("server error missing secret key", 500);
+      throw new AppError(
+        ErrorMsg.SERVER_MISSING_SECRET_KEY,
+        StatusCode.INTERNAL_SERVER_ERROR
+      );
     }
     const checkToken = verify(token, process.env.TOKEN_KEY);
 
     res.locals.decript = checkToken;
+    next();
   } catch (error) {
     next(error);
   }
