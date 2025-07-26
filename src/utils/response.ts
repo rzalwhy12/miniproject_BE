@@ -1,10 +1,12 @@
 import { Response } from "express";
+import { SuccessMsg } from "../constants/successMessage.enum";
 
-export const successResponse = <T>(
+//function handler response successs
+export const successRes = <T>(
   res: Response,
-  data: T,
-  message: string,
-  statusCode: number
+  message: SuccessMsg,
+  statusCode: number,
+  data?: T
 ) => {
   return res.status(statusCode).json({
     success: true,

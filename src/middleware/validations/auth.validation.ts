@@ -1,5 +1,6 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import { validationHandler } from "../validationHandler/validationHandler";
+import { Gender } from "../../../prisma/generated/client";
 
 class AuthValidator {
   public signUpValidation = [
@@ -25,12 +26,6 @@ class AuthValidator {
       })
       .withMessage("password is not strong enough"),
 
-    body("noTlp")
-      .notEmpty()
-      .withMessage("noTlp is required")
-      .isMobilePhone("id-ID")
-      .withMessage("noTlp must be a valid phone number"),
-
     body("brithDate")
       .notEmpty()
       .withMessage("brithDate is required")
@@ -41,10 +36,24 @@ class AuthValidator {
     body("gender")
       .notEmpty()
       .withMessage("gender is required")
-      .isIn(["MALE", "FEMALE"])
+      .isIn([Gender.MALE, Gender.FEMALE])
       .withMessage("gender must be either 'MALE' or 'FEMALE'"),
 
     validationHandler,
+  ];
+
+  public isEmailExist = [
+    param("email")
+      .notEmpty()
+      .withMessage("email is required")
+      .isEmail()
+      .withMessage("email is not valid"),
+
+    validationHandler,
+  ];
+
+  public isUsernameExist = [
+    body("username").notEmpty().withMessage("username is required"),
   ];
 }
 

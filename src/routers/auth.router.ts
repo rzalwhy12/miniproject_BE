@@ -21,10 +21,21 @@ class AuthRouter {
     this.initializeRouter();
   }
   private initializeRouter = (): void => {
+    //auth controller
     this.route.post(
       "/sign-up",
       this.authValidator.signUpValidation,
       this.authController.signUp
+    );
+    this.route.get(
+      "/email/:email",
+      this.authValidator.isEmailExist,
+      this.authController.isEmailExist
+    );
+    this.route.get(
+      "/username/:username",
+      this.authValidator.isUsernameExist,
+      this.authController.isUsernameExist
     );
   };
 

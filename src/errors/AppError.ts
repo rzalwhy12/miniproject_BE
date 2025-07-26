@@ -1,16 +1,21 @@
-//error handle
+import { IvalidationError } from "../types/errorValidation.type";
 
+//error handle
 class AppError {
   public rc: number; //rc (response code)
   public readonly success: boolean;
   public message: string;
-  public payload?: any;
+  public arrValidationErr?: IvalidationError[];
 
-  constructor(_message: string, _rc: number, _payload?: any) {
+  constructor(
+    _message: string,
+    _rc: number,
+    _arrValidationErr?: IvalidationError[]
+  ) {
     this.message = _message;
     this.rc = _rc;
     this.success = false; //default false
-    this.payload = _payload;
+    this.arrValidationErr = _arrValidationErr;
   }
 }
 
