@@ -11,6 +11,8 @@ export enum ErrorMsg {
   TOKEN_NOT_FOUND = "Token not found",
   TOKEN_INVALID = "Invalid token",
   TOKEN_EXPIRED = "Token expired",
+  TOKEN_NOT_PROVIDED = "no token provided",
   INVALID_INPUT = "Invalid input data",
   MISSING_QUERY_PARAMETERS = "Missing query parameters",
+  SERVER_MISSING_SECRET_KEY = "server error missing secret key",
 }
