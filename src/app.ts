@@ -47,16 +47,19 @@ class App {
         //handle erorr dari app error
         if (error instanceof AppError) {
           return res.status(error.rc).json({
-            success: error.success,
-            message: error.message,
-            arrVallidationErr: error.arrValidationErr,
+            result: {
+              success: error.success,
+              message: error.message,
+              arrVallidationErr: error.arrValidationErr,
+            },
           });
         }
         //error lain
         return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
-          success: false,
-          message:
-            error instanceof Error ? error : ErrorMsg.INTERNAL_SERVER_ERROR,
+          result: {
+            success: false,
+            message: error instanceof Error ? error : ErrorMsg.UNKNOWN_ERROR,
+          },
         });
       }
     );

@@ -1,10 +1,11 @@
 import { prisma } from "../config/prisma";
 import { hashPassword } from "../utils/hash";
 import { generateReferralCode } from "../utils/generateReferralCode";
-import { IUserSignUpDTO } from "../dto/user/user.Request.dto.";
+import { ILoginDTO, ISignUpDTO } from "../dto/user/user.Request.dto.";
+import { User } from "../../prisma/generated/client";
 
 class AuthServices {
-  public signUp = async (dataSignUp: IUserSignUpDTO) => {
+  public signUp = async (dataSignUp: ISignUpDTO) => {
     const newUser = await prisma.user.create({
       data: {
         ...dataSignUp,
@@ -14,6 +15,7 @@ class AuthServices {
     });
     return newUser;
   };
+
   //live isexist email dan username service
   public isEmailExist = async (email: string) => {
     const isExist: boolean =
@@ -34,6 +36,39 @@ class AuthServices {
       })) !== null;
 
     return isExist;
+  };
+
+  public loginUser = async (dataLogin: ILoginDTO) => {
+    const { username, email, password } = dataLogin;
+    let user: User;
+    if (username) {
+      user = (await prisma.user.findUnique({
+        where: {
+          username,
+        },
+      })) as User;
+      return user;
+    } else if (email) {
+      user = (await prisma.user.findUnique({
+        where: {
+          email,
+        },
+      })) as User;
+      return user;
+    }
+  };
+
+  public verifyUser = async (id: string) => {
+    const isVerify =
+      (await prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          isVerified: true,
+        },
+      })) !== null;
+    return isVerify;
   };
 }
 

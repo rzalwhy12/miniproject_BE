@@ -15,4 +15,5 @@ export enum ErrorMsg {
   INVALID_INPUT = "Invalid input data",
   MISSING_QUERY_PARAMETERS = "Missing query parameters",
   SERVER_MISSING_SECRET_KEY = "server error missing secret key",
+  UNKNOWN_ERROR = "Unknown errror",
 }

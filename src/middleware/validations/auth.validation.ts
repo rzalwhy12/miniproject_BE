@@ -1,6 +1,7 @@
 import { body, param } from "express-validator";
 import { validationHandler } from "../validationHandler/validationHandler";
 import { Gender } from "../../../prisma/generated/client";
+import { userInfo } from "os";
 
 class AuthValidator {
   public signUpValidation = [
@@ -53,7 +54,13 @@ class AuthValidator {
   ];
 
   public isUsernameExist = [
-    body("username").notEmpty().withMessage("username is required"),
+    param("username").notEmpty().withMessage("username is required"),
+  ];
+
+  public loginValidation = [
+    body("password").notEmpty().withMessage("password is required"),
+
+    validationHandler,
   ];
 }
 
