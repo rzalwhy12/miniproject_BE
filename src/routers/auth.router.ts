@@ -1,6 +1,8 @@
 import { Router } from "express";
 import AuthController from "../controllers/auth.controller";
 import AuthValidator from "../middleware/validations/auth.validation";
+import { verify } from "crypto";
+import { verifyToken } from "../middleware/verifyToken";
 
 class AuthRouter {
   private route: Router;
@@ -37,6 +39,13 @@ class AuthRouter {
       this.authValidator.isUsernameExist,
       this.authController.isUsernameExist
     );
+    this.route.post(
+      "/login",
+      this.authValidator.loginValidation,
+      this.authController.login
+    );
+    this.route.use(verifyToken);
+    this.route.get("/verify", this.authController.verifyUser);
   };
 
   public getRouter = () => {
