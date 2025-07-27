@@ -42,8 +42,6 @@ class App {
     this.app.use(
       //express tau kalo ini error handler dari 4 parameter ini error,req,res,next
       (error: unknown, req: Request, res: Response, next: NextFunction) => {
-        console.error(error);
-
         //handle erorr dari app error
         if (error instanceof AppError) {
           return res.status(error.rc).json({

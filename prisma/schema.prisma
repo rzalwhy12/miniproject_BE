@@ -22,7 +22,7 @@ model User {
   password     String
   name         String
   noTlp        String?
-  brithDate    DateTime
+  birthDate    DateTime
   gender       Gender
   role         Role     @default(CUSTOMER)
   referralCode String   @unique //nanti baut fungsi generate refferalcode

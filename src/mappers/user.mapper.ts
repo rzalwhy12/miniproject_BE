@@ -9,6 +9,6 @@ export const mapUserToDTO = (user: User): IUserDTO => {
     email: user.email,
     profileImage: user.profileImage,
     gender: user.gender,
-    brithDate: user.brithDate,
+    birthDate: user.birthDate,
   };
 };

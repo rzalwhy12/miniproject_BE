@@ -6,5 +6,5 @@ export interface IUserDTO {
   email: string;
   profileImage: string | null;
   gender: Gender;
-  brithDate: Date;
+  birthDate: Date;
 }
