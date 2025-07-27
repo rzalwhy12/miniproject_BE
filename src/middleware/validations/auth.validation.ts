@@ -27,7 +27,7 @@ class AuthValidator {
       })
       .withMessage("password is not strong enough"),
 
-    body("brithDate")
+    body("birthDate")
       .notEmpty()
       .withMessage("brithDate is required")
       .isISO8601()

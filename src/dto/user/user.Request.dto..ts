@@ -5,7 +5,7 @@ export interface ISignUpDTO {
   username: string;
   email: string;
   password: string;
-  brithDate: Date;
+  birthDate: Date;
   gender: Gender;
 }
 

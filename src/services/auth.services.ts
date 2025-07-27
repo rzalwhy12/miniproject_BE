@@ -10,7 +10,7 @@ class AuthServices {
       data: {
         ...dataSignUp,
         password: await hashPassword(dataSignUp.password),
-        referralCode: generateReferralCode(),
+        referralCode: await generateReferralCode(),
       },
     });
     return newUser;
@@ -18,22 +18,20 @@ class AuthServices {
 
   //live isexist email dan username service
   public isEmailExist = async (email: string) => {
-    const isExist: boolean =
-      (await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      })) !== null;
+    const isExist: boolean = !!(await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    }));
     return isExist;
   };
 
   public isUsernameExist = async (username: string) => {
-    const isExist: boolean =
-      (await prisma.user.findUnique({
-        where: {
-          username,
-        },
-      })) !== null;
+    const isExist: boolean = !!(await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    }));
 
     return isExist;
   };
@@ -59,15 +57,14 @@ class AuthServices {
   };
 
   public verifyUser = async (id: string) => {
-    const isVerify =
-      (await prisma.user.update({
-        where: {
-          id,
-        },
-        data: {
-          isVerified: true,
-        },
-      })) !== null;
+    const isVerify = !!(await prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        isVerified: true,
+      },
+    }));
     return isVerify;
   };
 }
