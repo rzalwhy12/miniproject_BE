@@ -16,20 +16,20 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique
-  email        String   @unique
+  id           String     @id @default(uuid())
+  username     String     @unique
+  email        String     @unique
   password     String
   name         String
   noTlp        String?
   birthDate    DateTime
   gender       Gender
-  role         Role     @default(CUSTOMER)
-  referralCode String   @unique //nanti baut fungsi generate refferalcode
-  isVerified   Boolean  @default(false)
+  roles        UserRole[]
+  referralCode String     @unique //nanti baut fungsi generate refferalcode
+  isVerified   Boolean    @default(false)
   profileImage String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   events            Event[] // organizer's created events
   transactions      Transaction[]
@@ -39,9 +39,26 @@ model User {
   points            Point[]
 }
 
-enum Role {
+model Role {
+  id    String     @id @default(uuid())
+  name  RoleName   @unique
+  users UserRole[]
+}
+
+enum RoleName {
   CUSTOMER
   ORGANIZER
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  role   Role   @relation(fields: [roleId], references: [id])
+  roleId String
+
+  isActive Boolean @default(false)
 }
 
 enum Gender {

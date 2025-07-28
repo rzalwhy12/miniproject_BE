@@ -9,8 +9,7 @@ export interface ISignUpDTO {
   gender: Gender;
 }
 
-export interface ILoginDTO {
+export interface IIsExist {
   email?: string;
   username?: string;
-  password: string;
 }

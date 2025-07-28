@@ -2,9 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import AppError from "../../errors/AppError";
 import { StatusCode } from "../../constants/statusCode.enum";
-import { IvalidationError } from "../../types/errorValidation.type";
 import { ErrorMsg } from "../../constants/errorMessage.enum";
 
+export interface IvalidationError {
+  field: string;
+}
 export const validationHandler = (
   req: Request,
   res: Response,
@@ -26,7 +28,7 @@ export const validationHandler = (
         msgArrayError
       );
     } else {
-      //jika tidak error next ke controller
+      //jika tidak error, next ke controller
       next();
     }
   } catch (error) {

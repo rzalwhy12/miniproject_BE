@@ -1,4 +1,4 @@
-import { IvalidationError } from "../types/errorValidation.type";
+import { IvalidationError } from "../middleware/validationHandler/validationHandler";
 
 //error handle
 class AppError {
