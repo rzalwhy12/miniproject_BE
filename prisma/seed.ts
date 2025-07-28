@@ -3,9 +3,9 @@ import {
   EventCategory,
   EventStatus,
   Gender,
-  Role,
   TransactionStatus,
   VoucherStatus,
+  RoleName, // pastikan enum RoleName ada
 } from "./generated/client";
 import { hashPassword } from "../src/utils/hash";
 import { prisma } from "../src/config/prisma";
@@ -13,6 +13,21 @@ import { prisma } from "../src/config/prisma";
 async function main() {
   const passwordHash = await hashPassword("password!23");
 
+  // 1. Upsert Role enum ke table Role
+  const [customerRole, organizerRole] = await Promise.all([
+    prisma.role.upsert({
+      where: { name: RoleName.CUSTOMER },
+      update: {},
+      create: { name: RoleName.CUSTOMER },
+    }),
+    prisma.role.upsert({
+      where: { name: RoleName.ORGANIZER },
+      update: {},
+      create: { name: RoleName.ORGANIZER },
+    }),
+  ]);
+
+  // 2. Buat user tanpa field 'role'
   const user1 = await prisma.user.create({
     data: {
       username: "johndoe",
@@ -22,7 +37,6 @@ async function main() {
       noTlp: "081234567890",
       birthDate: new Date("1995-05-10"),
       gender: Gender.MALE,
-      role: Role.CUSTOMER,
       referralCode: "REF12345",
       isVerified: true,
     },
@@ -36,12 +50,33 @@ async function main() {
       name: "Jane Smith",
       birthDate: new Date("1998-09-25"),
       gender: Gender.FEMALE,
-      role: Role.ORGANIZER,
       referralCode: "REF67890",
       isVerified: false,
     },
   });
 
+  // 3. Assign Role ke User lewat tabel pivot UserRole
+  await prisma.userRole.createMany({
+    data: [
+      {
+        userId: user1.id,
+        roleId: customerRole.id,
+        isActive: true, // user1 aktif sebagai customer
+      },
+      {
+        userId: user2.id,
+        roleId: organizerRole.id,
+        isActive: true, // user2 aktif sebagai organizer
+      },
+      {
+        userId: user2.id,
+        roleId: customerRole.id,
+        isActive: false, // user2 juga bisa jadi customer (multi-role)
+      },
+    ],
+  });
+
+  // 4. Event dan data lainnya
   const event = await prisma.event.create({
     data: {
       name: "React Conference 2025",
@@ -141,7 +176,7 @@ async function main() {
     },
   });
 
-  console.log("🌱 Dummy data berhasil di-seed");
+  console.log("🌱 Dummy data berhasil di-seed dengan role!");
 }
 
 main()
