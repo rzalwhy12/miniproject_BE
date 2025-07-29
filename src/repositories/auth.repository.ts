@@ -1,9 +1,15 @@
 import { prisma } from "../config/prisma";
-import { IIsExist, ISignUpDTO } from "../dto/user/user.Request.dto.";
+import {
+  IDataCoupon,
+  IDataPoint,
+  IDataReferral,
+  IFindAccount,
+  ISignUpDTO,
+} from "../dto/user/user.Request.dto.";
 import { generateReferralCode } from "../utils/generateReferralCode";
 import { hashPassword } from "../utils/hash";
 
-//repocitories yang berhubungan dengan database
+//repocitosreies yang berhubungan dengan database
 class AuthRepository {
   public createUser = async (dataSignUp: ISignUpDTO) => {
     return await prisma.user.create({
@@ -14,8 +20,8 @@ class AuthRepository {
       },
     });
   };
-  public findAccount = async (dataLogin: IIsExist) => {
-    const { email, username } = dataLogin;
+  public findAccount = async (dataFindUnique: IFindAccount) => {
+    const { email, username, referral } = dataFindUnique;
     if (email) {
       return await prisma.user.findUnique({ where: { email } });
     }
@@ -24,7 +30,37 @@ class AuthRepository {
       return await prisma.user.findUnique({ where: { username } });
     }
 
+    if (referral) {
+      return await prisma.user.findUnique({
+        where: { referralCode: referral },
+      });
+    }
+
     return null;
+  };
+  public AddReferral = async (dataReferal: IDataReferral) => {
+    return await prisma.referral.create({
+      data: {
+        ...dataReferal,
+      },
+      include: {
+        coupon: true,
+      },
+    });
+  };
+  public AddCoupon = async (dataCoupon: IDataCoupon) => {
+    return await prisma.coupon.create({
+      data: {
+        ...dataCoupon,
+      },
+    });
+  };
+  public AddPoint = async (dataPoint: IDataPoint) => {
+    return await prisma.point.create({
+      data: {
+        ...dataPoint,
+      },
+    });
   };
 }
 

@@ -1,15 +1,16 @@
 import { sign, SignOptions } from "jsonwebtoken";
-import { Role } from "../../prisma/generated/client";
+import { RoleName } from "../../prisma/generated/client";
 
 interface IObjectToken {
   id: string;
-  role: Role;
+  email: string;
   isverified: boolean;
+  activeRole: RoleName;
 }
 export const generateToken = (
   objectToken: IObjectToken,
   key: string,
-  options: SignOptions = { expiresIn: "1h" } //default expire 7h
+  options: SignOptions = { expiresIn: "1h" } //default expire 1h
 ): string => {
   return sign(objectToken, key, options);
 };

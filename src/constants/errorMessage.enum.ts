@@ -16,4 +16,5 @@ export enum ErrorMsg {
   MISSING_QUERY_PARAMETERS = "Missing query parameters",
   SERVER_MISSING_SECRET_KEY = "server error missing secret key",
   UNKNOWN_ERROR = "Unknown errror",
+  REFERRAL_GIVEN_NOT_FOUND = "Referral given not found",
 }
