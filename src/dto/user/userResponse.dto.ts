@@ -4,6 +4,4 @@ export interface IUserDTO {
   name: string;
   username: string;
   profileImage: string | null;
-  gender: Gender;
-  birthDate: Date;
 }

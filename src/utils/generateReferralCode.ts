@@ -13,7 +13,7 @@ export const generateReferralCode = async () => {
     const existingUser = await prisma.user.findUnique({
       where: { referralCode: code },
     });
-    exists = !!existingUser; //double negation mengubah nilai apaun yang bernilai falsy false dan truthy true
+    exists = !!existingUser;
   } while (exists);
 
   return code;

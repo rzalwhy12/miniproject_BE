@@ -25,20 +25,6 @@ class AuthValidator {
         minSymbols: 1,
       })
       .withMessage("password is not strong enough"),
-
-    body("birthDate")
-      .notEmpty()
-      .withMessage("brithDate is required")
-      .isISO8601()
-      .withMessage("brithDate must be a valid date")
-      .toDate(),
-
-    body("gender")
-      .notEmpty()
-      .withMessage("gender is required")
-      .isIn([Gender.MALE, Gender.FEMALE])
-      .withMessage("gender must be either 'MALE' or 'FEMALE'"),
-
     validationHandler,
   ];
 
