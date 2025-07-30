@@ -4,9 +4,6 @@ import AppError from "../../errors/AppError";
 import { StatusCode } from "../../constants/statusCode.enum";
 import { ErrorMsg } from "../../constants/errorMessage.enum";
 
-export interface IvalidationError {
-  field: string;
-}
 export const validationHandler = (
   req: Request,
   res: Response,
@@ -16,17 +13,9 @@ export const validationHandler = (
     const errorValidation = validationResult(req);
 
     if (!errorValidation.isEmpty()) {
-      const msgArrayError: IvalidationError[] = errorValidation
-        .array()
-        .map((error) => ({
-          field: error.msg,
-        }));
+      const msgArrayError = errorValidation.array()[0].msg as string;
 
-      throw new AppError(
-        ErrorMsg.INVALID_INPUT,
-        StatusCode.BAD_REQUEST,
-        msgArrayError
-      );
+      throw new AppError(msgArrayError, StatusCode.BAD_REQUEST);
     } else {
       //jika tidak error, next ke controller
       next();

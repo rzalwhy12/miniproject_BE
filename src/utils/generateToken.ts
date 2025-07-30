@@ -1,16 +1,18 @@
-import { sign, SignOptions } from "jsonwebtoken";
+import { sign } from "jsonwebtoken";
 import { RoleName } from "../../prisma/generated/client";
 
+type TimeUnit = `${number}${"s" | "m" | "h" | "d" | "w" | "y"}`;
 interface IObjectToken {
-  id: string;
+  id: number;
   email: string;
   isverified: boolean;
   activeRole: RoleName;
 }
 export const generateToken = (
   objectToken: IObjectToken,
-  key: string,
-  options: SignOptions = { expiresIn: "1h" } //default expire 1h
-): string => {
-  return sign(objectToken, key, options);
+  expiresIn: TimeUnit = "1h"
+) => {
+  if (!process.env.TOKEN_KEY) return null;
+
+  return sign(objectToken, process.env.TOKEN_KEY, { expiresIn });
 };

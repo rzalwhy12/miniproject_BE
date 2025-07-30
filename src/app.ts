@@ -7,6 +7,7 @@ import eventRouter from "./routers/event.router";
 import AppError from "./errors/AppError";
 import { StatusCode } from "./constants/statusCode.enum";
 import { ErrorMsg } from "./constants/errorMessage.enum";
+import { Prisma } from "../prisma/generated/client";
 
 const PORT: string = process.env.PORT || "8181";
 
@@ -50,23 +51,38 @@ class App {
 
   private errorHandler = (): void => {
     this.app.use(
-      //express tau kalo ini error handler dari 4 parameter ini error,req,res,next
       (error: unknown, req: Request, res: Response, next: NextFunction) => {
-        //handle erorr dari app error
+        // error dari AppError
         if (error instanceof AppError) {
           return res.status(error.rc).json({
             result: {
               success: error.success,
               message: error.message,
-              arrVallidationErr: error.arrValidationErr,
             },
           });
         }
-        //error lain
+
+        // Prisma error handling
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === "P2002") {
+            const target = error.meta?.target as string[];
+            const field = target[0];
+            return res.status(409).json({
+              result: {
+                success: false,
+                message: `${field} already used`,
+              },
+            });
+          }
+        }
+
+        // unknown error
+        const message =
+          error instanceof Error ? error.message : ErrorMsg.UNKNOWN_ERROR;
         return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
           result: {
             success: false,
-            message: error instanceof Error ? error : ErrorMsg.UNKNOWN_ERROR,
+            message,
           },
 
         });

@@ -4,8 +4,6 @@ export enum ErrorMsg {
   ROUTE_NOT_FOUND = "Route not found",
 
   // Auth
-  EMAIL_ALREADY_USED = "Email already used",
-  USERNAME_ALREADY_USED = "Username already used",
   INVALID_EMAIL_OR_PASSWORD = "Invalid email or password",
   UNAUTHORIZED = "Unauthorized access",
   TOKEN_NOT_FOUND = "Token not found",
@@ -16,5 +14,5 @@ export enum ErrorMsg {
   MISSING_QUERY_PARAMETERS = "Missing query parameters",
   SERVER_MISSING_SECRET_KEY = "server error missing secret key",
   UNKNOWN_ERROR = "Unknown errror",
-  REFERRAL_GIVEN_NOT_FOUND = "Referral given not found",
+  REFERRAL_GIVEN_NOT_FOUND = "ReferralCode not found",
 }

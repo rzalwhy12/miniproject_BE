@@ -27,7 +27,6 @@ export const verifyToken = (
       );
     }
     const checkToken = verify(token, process.env.TOKEN_KEY);
-
     res.locals.decript = checkToken;
     next();
   } catch (error) {
