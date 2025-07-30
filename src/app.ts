@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+
 import cors from "cors";
 import express, { Application, NextFunction, Request, Response } from "express";
 import AuthRouter from "./routers/auth.router";
@@ -12,47 +13,40 @@ import { Prisma } from "../prisma/generated/client";
 const PORT: string = process.env.PORT || "8181";
 
 class App {
-    public app: Application;
+  public app: Application;
 
-    constructor() {
-        this.app = express();
-        this.configure();
-        this.route();
-        this.errorHandler();
-    }
+  constructor() {
+    this.app = express();
+    this.configure();
+    this.route();
+    this.errorHandler();
+  }
 
-    private configure = (): void => {
-        this.app.use(cors());
-        this.app.use(express.json({ limit: '10mb' })); // Increase JSON limit
-        this.app.use(express.urlencoded({ limit: '10mb', extended: true })); // Add URL encoded support
-    };
+  private configure = (): void => {
+    this.app.use(cors());
+    this.app.use(express.json({ limit: "10mb" }));
+    this.app.use(express.urlencoded({ limit: "10mb", extended: true }));
+    this.start();
+  };
 
-    private route = (): void => {
-        const authrouter: AuthRouter = new AuthRouter();
-        this.app.get("/", (req: Request, res: Response, next: NextFunction) => {
-            res.status(200).send("<h1>Test Tiket Backend</h1>");
-        });
+  private route = (): void => {
+    const authrouter: AuthRouter = new AuthRouter();
 
-        this.app.use("/auth", authrouter.getRouter());
-        this.app.use("/events", eventRouter);
+    this.app.get("/", (req: Request, res: Response) => {
+      res.status(200).send("<h1>Test Tiket Backend</h1>");
+    });
 
-        // Error for route not found
-        this.app.use((req: Request, res: Response, next: NextFunction) => {
-            next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
-        });
-    };
+    this.app.use("/auth", authrouter.getRouter());
+    this.app.use("/events", eventRouter);
 
-    private errorHandler = (): void => {
-        this.app.use(
-            (error: unknown, req: Request, res: Response, next: NextFunction) => {
-                console.error(error);
-
-
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
+    });
+  };
 
   private errorHandler = (): void => {
     this.app.use(
       (error: unknown, req: Request, res: Response, next: NextFunction) => {
-        // error dari AppError
         if (error instanceof AppError) {
           return res.status(error.rc).json({
             result: {
@@ -62,7 +56,6 @@ class App {
           });
         }
 
-        // Prisma error handling
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
             const target = error.meta?.target as string[];
@@ -76,17 +69,23 @@ class App {
           }
         }
 
-        // unknown error
         const message =
           error instanceof Error ? error.message : ErrorMsg.UNKNOWN_ERROR;
+
         return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
           result: {
             success: false,
             message,
           },
-
         });
-    };
+      }
+    );
+  };
+  public start = (): void => {
+    this.app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  };
 }
 
 export default App;
