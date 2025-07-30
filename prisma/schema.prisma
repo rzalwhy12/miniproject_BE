@@ -9,31 +9,96 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum RoleName {
+  CUSTOMER
+  ORGANIZER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum EventStatus {
+  PUBLISHED
+  DRAFT
+  PAST
+}
+
+enum EventCategory {
+  CONFERENCE
+  WORKSHOP
+  SEMINAR
+  BOOTCAMP
+  COMPETITION
+  FESTIVAL
+  MUSIC
+  SPORTS
+  TECH
+  ART
+  EDUCATION
+  CHARITY
+  LAINNYA
+}
+
+enum TransactionStatus {
+  WAITING_PAYMENT
+  WAITING_CONFIRMATION
+  DONE
+  REJECTED
+  EXPIRED
+  CANCELED
+}
+
+enum VoucherStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
 model User {
-  id                String        @id @default(uuid())
-  email             String        @unique
-  name              String
-  password          String
-  role              Role          @default(CUSTOMER)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  profileImage      String?
-  referralCode      String        @unique
-  username          String        @unique
-  noTlp             String?
-  isVerified        Boolean       @default(false)
-  brithDate         DateTime
-  gender            Gender
+
+  id           Int        @id @default(autoincrement())
+  username     String     @unique
+  email        String     @unique
+  password     String
+  name         String
+  noTlp        String?
+  birthDate    DateTime?
+  gender       Gender?
+  roles        UserRole[]
+  referralCode String     @unique
+  isVerified   Boolean    @default(false)
+  profileImage String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
   events            Event[]
-  points            Point[]
-  referralsReceived Referral?     @relation("Referred")
-  referralsGiven    Referral[]    @relation("Referrer")
-  reviews           Review[]
   transactions      Transaction[]
+  reviews           Review[]
+  referralsGiven    Referral[]    @relation("Referrer")
+  referralsReceived Referral[]    @relation("Referred")
+  points            Point[]
+}
+
+model Role {
+  id    Int        @id @default(autoincrement())
+  name  RoleName   @unique
+  users UserRole[]
+}
+
+model UserRole {
+  id       Int     @id @default(autoincrement())
+  user     User    @relation(fields: [userId], references: [id])
+  userId   Int
+  role     Role    @relation(fields: [roleId], references: [id])
+  roleId   Int
+  isActive Boolean @default(false)
+
 }
 
 model Event {
-  id              String        @id @default(uuid())
+  id              Int           @id @default(autoincrement())
   name            String
   description     String?
   startDate       DateTime
@@ -42,22 +107,23 @@ model Event {
   organizerId     String
   location        String
   updatedAt       DateTime      @updatedAt
-  statusEvent     EventStatus
-  syaratKetentuan String?
-  category        EventCategory
-  organizer       User          @relation(fields: [organizerId], references: [id])
-  eventTags       EventTag[]
-  reviews         Review[]
-  ticketTypes     TicketType[]
-  transactions    Transaction[]
-  vouchers        Voucher[]
+
+
+  organizer   User @relation(fields: [organizerId], references: [id])
+  organizerId Int
+
+  transactions Transaction[]
+  vouchers     Voucher[]
+  reviews      Review[]
+  ticketTypes  TicketType[]
+
 
   @@index([category, startDate])
   @@index([organizerId])
 }
 
 model Tag {
-  id        String     @id @default(uuid())
+  id        Int        @id @default(autoincrement())
   name      String     @unique
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -65,8 +131,12 @@ model Tag {
 }
 
 model EventTag {
-  eventId   String
-  tagId     String
+
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   Int
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  tagId     Int
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   event     Event    @relation(fields: [eventId], references: [id])
@@ -76,89 +146,112 @@ model EventTag {
 }
 
 model TicketType {
-  id          String      @id @default(uuid())
+
+  id          Int      @id @default(autoincrement())
+
   name        String
   price       Int
   quota       Int
   description String?
   benefit     String?
-  eventId     String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItem   OrderItem[]
-  event       Event       @relation(fields: [eventId], references: [id])
+
+  event       Event    @relation(fields: [eventId], references: [id])
+  eventId     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItem OrderItem[]
 }
 
 model OrderItem {
-  id            String      @id @default(uuid())
-  transactionId String
-  ticketTypeId  String
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+  ticketType    TicketType  @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId  Int
   quantity      Int
   subTotal      Int
-  ticketType    TicketType  @relation(fields: [ticketTypeId], references: [id])
-  transaction   Transaction @relation(fields: [transactionId], references: [id])
 }
 
 model Transaction {
-  id           String            @id @default(uuid())
-  eventId      String
-  totalPrice   Int
+  id           Int               @id @default(autoincrement())
+  user         User              @relation(fields: [customerId], references: [id])
+  customerId   Int
+  event        Event             @relation(fields: [eventId], references: [id])
+  eventId      Int
+
   status       TransactionStatus
   paymentProof String?
   createdAt    DateTime          @default(now())
   expiredAt    DateTime?
   updatedAt    DateTime          @updatedAt
-  customerId   String
-  orderItems   OrderItem[]
-  user         User              @relation(fields: [customerId], references: [id])
-  event        Event             @relation(fields: [eventId], references: [id])
+
+
+  orderItems OrderItem[]
+
 }
 
 model Review {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
-  eventId   String
-  userId    String
-  event     Event    @relation(fields: [eventId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+
+
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  user    User  @relation(fields: [userId], references: [id])
+  userId  Int
+
 }
 
 model Voucher {
-  id        String        @id @default(uuid())
+  id        Int           @id @default(autoincrement())
   code      String        @unique
   discount  Int
   startDate DateTime
   endDate   DateTime
-  eventId   String
-  status    VoucherStatus @default(ACTIVE)
-  event     Event         @relation(fields: [eventId], references: [id])
+
+
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
 }
 
 model Referral {
-  id         String   @id @default(uuid())
-  createdAt  DateTime @default(now())
-  referrerId String
-  referredId String   @unique
-  coupon     Coupon?
-  referred   User     @relation("Referred", fields: [referredId], references: [id])
-  referrer   User     @relation("Referrer", fields: [referrerId], references: [id])
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  referrer   User @relation("Referrer", fields: [referrerId], references: [id])
+  referrerId Int //memberi
+
+  referred   User @relation("Referred", fields: [referredId], references: [id])
+  referredId Int  @unique //menerima
+
+  coupon Coupon?
+
 }
 
+//coupon saat daftar 10%
 model Coupon {
-  id         String    @id @default(uuid())
+  id         Int       @id @default(autoincrement())
   discount   Int
   expiresAt  DateTime
-  referralId String    @unique
+
   isUsed     Boolean   @default(false)
+  referral   Referral  @relation(fields: [referralId], references: [id])
+  referralId Int       @unique
+
   useAt      DateTime?
   referral   Referral  @relation(fields: [referralId], references: [id])
 }
 
 model Point {
-  id        String   @id @default(uuid())
-  userId    String
+
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  isUsed    Boolean  @default(false)
+
   amount    Int
   expiresAt DateTime
   createdAt DateTime @default(now())

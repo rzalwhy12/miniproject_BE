@@ -4,30 +4,17 @@ import AppError from "../errors/AppError";
 import { SuccessMsg } from "../constants/successMessage.enum";
 import { StatusCode } from "../constants/statusCode.enum";
 import { ErrorMsg } from "../constants/errorMessage.enum";
-import SendResSuccess from "../utils/SendResSuccess";
+import { sendResSuccess } from "../utils/sendResSuccess";
 import { mapUserToDTO } from "../mappers/user.mapper";
-import { compare } from "bcrypt";
 
+//controller tugasnya unutk mengirim response saja
 class AuthController {
-  private authService: AuthServices;
-
-  //resSendSuccess
-  private sendResSuccess: SendResSuccess;
-
-  constructor() {
-    this.authService = new AuthServices();
-    this.sendResSuccess = new SendResSuccess();
-  }
+  private authService = new AuthServices();
 
   public signUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const newUser = await this.authService.signUp(req.body);
-      this.sendResSuccess.sendDataUser(
-        res,
-        SuccessMsg.USER_CREATED,
-        StatusCode.CREATED,
-        mapUserToDTO(newUser)
-      );
+      await this.authService.signUp(req.body);
+      sendResSuccess(res, SuccessMsg.USER_CREATED, StatusCode.CREATED);
     } catch (error) {
       next(error);
     }
@@ -39,11 +26,11 @@ class AuthController {
     next: NextFunction
   ) => {
     try {
-      const isExist = await this.authService.isEmailExist(req.params.email);
+      const isExist = await this.authService.isExist(req.body);
       if (isExist) {
         throw new AppError(ErrorMsg.EMAIL_ALREADY_USED, StatusCode.CONFLICT);
       }
-      this.sendResSuccess.generalMessage(res, SuccessMsg.OK, StatusCode.OK);
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
     } catch (error) {
       next(error);
     }
@@ -55,13 +42,12 @@ class AuthController {
     next: NextFunction
   ) => {
     try {
-      const isExist = await this.authService.isUsernameExist(
-        req.params.username
-      );
+      const isExist = await this.authService.isExist(req.body);
+      console.log(isExist);
       if (isExist) {
         throw new AppError(ErrorMsg.USERNAME_ALREADY_USED, StatusCode.CONFLICT);
       }
-      this.sendResSuccess.generalMessage(res, SuccessMsg.OK, StatusCode.OK);
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
     } catch (error) {
       next(error);
     }
@@ -69,20 +55,18 @@ class AuthController {
 
   public login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await this.authService.loginUser(req.body);
-      if (!user) {
-        throw new AppError(
-          ErrorMsg.INVALID_EMAIL_OR_PASSWORD,
-          StatusCode.NOT_FOUND
-        );
-      }
-      const comparePassword = await compare(req.body.password, user.password);
-      if (comparePassword) {
-        this.sendResSuccess.sendDataUser(
+      const { email, username, password } = req.body;
+      const data = await this.authService.loginUser(
+        { email, username },
+        password
+      );
+
+      if (data.comparePassword) {
+        sendResSuccess(
           res,
           SuccessMsg.USER_LOGGED_IN,
           StatusCode.OK,
-          mapUserToDTO(user)
+          mapUserToDTO(data.user)
         );
       }
       throw new AppError(
@@ -101,11 +85,7 @@ class AuthController {
   ) => {
     try {
       const isVerify = await this.authService.verifyUser(res.locals.decript);
-      this.sendResSuccess.generalMessage(
-        res,
-        SuccessMsg.EMAIL_VERIFIED,
-        StatusCode.OK
-      );
+      sendResSuccess(res, SuccessMsg.EMAIL_VERIFIED, StatusCode.OK);
     } catch (error) {
       next(error);
     }

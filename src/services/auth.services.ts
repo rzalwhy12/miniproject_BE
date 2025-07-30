@@ -1,73 +1,75 @@
 import { prisma } from "../config/prisma";
-import { hashPassword } from "../utils/hash";
-import { generateReferralCode } from "../utils/generateReferralCode";
-import { ILoginDTO, ISignUpDTO } from "../dto/user/user.Request.dto.";
-import { User } from "../../prisma/generated/client";
+import { IFindAccount, ISignUpDTO } from "../dto/user/user.Request.dto.";
+import AuthRepository from "../repositories/auth.repository";
+import AppError from "../errors/AppError";
+import { ErrorMsg } from "../constants/errorMessage.enum";
+import { StatusCode } from "../constants/statusCode.enum";
+import { compare } from "bcrypt";
+import dayjs from "dayjs";
 
+//logicnya di service
 class AuthServices {
+  //define class
+  private authRepository = new AuthRepository();
+
+  //method define
   public signUp = async (dataSignUp: ISignUpDTO) => {
-    const newUser = await prisma.user.create({
-      data: {
-        ...dataSignUp,
-        password: await hashPassword(dataSignUp.password),
-        referralCode: generateReferralCode(),
-      },
+    const newUser = await this.authRepository.createUser(dataSignUp);
+    if (!dataSignUp.referralCode) return newUser;
+    const userGivenReferral = await this.authRepository.findAccount({
+      referral: dataSignUp.referralCode,
+    });
+    if (!userGivenReferral)
+      throw new AppError(
+        ErrorMsg.REFERRAL_GIVEN_NOT_FOUND,
+        StatusCode.NOT_FOUND
+      );
+    const referral = await this.authRepository.AddReferral({
+      referrerId: userGivenReferral.id,
+      referredId: newUser.id,
+    });
+    const expiresAt = dayjs().add(3, "month").toDate();
+    await this.authRepository.AddCoupon({
+      discount: 10,
+      expiresAt,
+      referralId: referral.id,
+    });
+    //point ketika user memberikan referralnya 10.000
+    await this.authRepository.AddPoint({
+      userId: userGivenReferral.id,
+      amount: 10000,
+      expiresAt,
     });
     return newUser;
   };
 
   //live isexist email dan username service
-  public isEmailExist = async (email: string) => {
-    const isExist: boolean =
-      (await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      })) !== null;
+  public isExist = async (field: IFindAccount) => {
+    const isExist = await this.authRepository.findAccount(field);
     return isExist;
   };
 
-  public isUsernameExist = async (username: string) => {
-    const isExist: boolean =
-      (await prisma.user.findUnique({
-        where: {
-          username,
-        },
-      })) !== null;
-
-    return isExist;
-  };
-
-  public loginUser = async (dataLogin: ILoginDTO) => {
-    const { username, email, password } = dataLogin;
-    let user: User;
-    if (username) {
-      user = (await prisma.user.findUnique({
-        where: {
-          username,
-        },
-      })) as User;
-      return user;
-    } else if (email) {
-      user = (await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      })) as User;
-      return user;
+  public loginUser = async (dataLogin: IFindAccount, passwordBody: string) => {
+    const user = await this.authRepository.findAccount(dataLogin);
+    if (!user) {
+      throw new AppError(
+        ErrorMsg.INVALID_EMAIL_OR_PASSWORD,
+        StatusCode.NOT_FOUND
+      );
     }
+    const comparePassword = await compare(passwordBody, user.password);
+    return { user, comparePassword };
   };
 
-  public verifyUser = async (id: string) => {
-    const isVerify =
-      (await prisma.user.update({
-        where: {
-          id,
-        },
-        data: {
-          isVerified: true,
-        },
-      })) !== null;
+  public verifyUser = async (id: number) => {
+    const isVerify = !!(await prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        isVerified: true,
+      },
+    }));
     return isVerify;
   };
 }
