@@ -3,6 +3,7 @@ dotenv.config();
 import cors from "cors";
 import express, { Application, NextFunction, Request, Response } from "express";
 import AuthRouter from "./routers/auth.router";
+import eventRouter from "./routers/event.router";
 import AppError from "./errors/AppError";
 import { StatusCode } from "./constants/statusCode.enum";
 import { ErrorMsg } from "./constants/errorMessage.enum";
@@ -21,7 +22,8 @@ class App {
 
     private configure = (): void => {
         this.app.use(cors());
-        this.app.use(express.json());
+        this.app.use(express.json({ limit: '10mb' })); // Increase JSON limit
+        this.app.use(express.urlencoded({ limit: '10mb', extended: true })); // Add URL encoded support
     };
 
     private route = (): void => {
@@ -31,8 +33,9 @@ class App {
         });
 
         this.app.use("/auth", authrouter.getRouter());
+        this.app.use("/events", eventRouter);
 
-        //erorr buat jika route tidak ketemu
+        // Error for route not found
         this.app.use((req: Request, res: Response, next: NextFunction) => {
             next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
         });
@@ -40,11 +43,9 @@ class App {
 
     private errorHandler = (): void => {
         this.app.use(
-            //express tau kalo ini error handler dari 4 parameter ini error,req,res,next
             (error: unknown, req: Request, res: Response, next: NextFunction) => {
                 console.error(error);
 
-                //handle erorr dari app error
                 if (error instanceof AppError) {
                     return res.status(error.rc).json({
                         result: {
@@ -54,11 +55,11 @@ class App {
                         },
                     });
                 }
-                //error lain
+
                 return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
                     result: {
                         success: false,
-                        message: error instanceof Error ? error : ErrorMsg.UNKNOWN_ERROR,
+                        message: error instanceof Error ? error.message : ErrorMsg.UNKNOWN_ERROR,
                     },
                 });
             }

@@ -1,7 +1,6 @@
 import { Router } from "express";
 import AuthController from "../controllers/auth.controller";
 import AuthValidator from "../middleware/validations/auth.validation";
-import { verify } from "crypto";
 import { verifyToken } from "../middleware/verifyToken";
 
 class AuthRouter {
@@ -29,14 +28,14 @@ class AuthRouter {
       this.authValidator.signUpValidation,
       this.authController.signUp
     );
-    this.route.get(
-      "/email/:email",
-      this.authValidator.isEmailExist,
+    this.route.post(
+      "/check-email",
+      this.authValidator.isEmailExistValidation,
       this.authController.isEmailExist
     );
-    this.route.get(
-      "/username/:username",
-      this.authValidator.isUsernameExist,
+    this.route.post(
+      "/check-username",
+      this.authValidator.isUsernameExistValidation,
       this.authController.isUsernameExist
     );
     this.route.post(

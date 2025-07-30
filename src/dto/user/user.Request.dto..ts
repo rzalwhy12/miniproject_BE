@@ -5,12 +5,29 @@ export interface ISignUpDTO {
   username: string;
   email: string;
   password: string;
-  brithDate: Date;
-  gender: Gender;
+  referralCode: string;
 }
 
-export interface ILoginDTO {
+export interface IFindAccount {
   email?: string;
   username?: string;
-  password: string;
+  referral?: string;
+}
+export interface IDataReferral {
+  referrerId: number;
+  referredId: number;
+}
+export interface IDataCoupon {
+  discount: number;
+  expiresAt: Date;
+  referralId: number;
+  isUsed?: boolean;
+  useAt?: Date;
+}
+
+export interface IDataPoint {
+  userId: number;
+  isUsed?: boolean;
+  amount: number;
+  expiresAt: Date;
 }

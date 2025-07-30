@@ -10,11 +10,9 @@ datasource db {
 }
 
 model User {
-  id                String        @id @default(uuid())
   email             String        @unique
   name              String
   password          String
-  role              Role          @default(CUSTOMER)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   profileImage      String?
@@ -22,29 +20,47 @@ model User {
   username          String        @unique
   noTlp             String?
   isVerified        Boolean       @default(false)
-  brithDate         DateTime
-  gender            Gender
+  gender            Gender?
+  birthDate         DateTime?
+  id                Int           @id @default(autoincrement())
   events            Event[]
   points            Point[]
   referralsReceived Referral?     @relation("Referred")
   referralsGiven    Referral[]    @relation("Referrer")
   reviews           Review[]
   transactions      Transaction[]
+  roles             UserRole[]
+}
+
+model Role {
+  name  RoleName   @unique
+  id    Int        @id @default(autoincrement())
+  users UserRole[]
+}
+
+model UserRole {
+  isActive Boolean @default(false)
+  roleId   Int
+  id       Int     @id @default(autoincrement())
+  userId   Int
+  role     Role    @relation(fields: [roleId], references: [id])
+  user     User    @relation(fields: [userId], references: [id])
 }
 
 model Event {
-  id              String        @id @default(uuid())
   name            String
   description     String?
   startDate       DateTime
   endDate         DateTime
   createdAt       DateTime      @default(now())
-  organizerId     String
   location        String
   updatedAt       DateTime      @updatedAt
+  image           String?
   statusEvent     EventStatus
   syaratKetentuan String?
   category        EventCategory
+  id              Int           @id @default(autoincrement())
+  organizerId     Int
   organizer       User          @relation(fields: [organizerId], references: [id])
   eventTags       EventTag[]
   reviews         Review[]
@@ -57,18 +73,18 @@ model Event {
 }
 
 model Tag {
-  id        String     @id @default(uuid())
   name      String     @unique
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  id        Int        @id @default(autoincrement())
   eventTags EventTag[]
 }
 
 model EventTag {
-  eventId   String
-  tagId     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  eventId   Int
+  tagId     Int
   event     Event    @relation(fields: [eventId], references: [id])
   tag       Tag      @relation(fields: [tagId], references: [id])
 
@@ -76,104 +92,104 @@ model EventTag {
 }
 
 model TicketType {
-  id          String      @id @default(uuid())
   name        String
   price       Int
   quota       Int
   description String?
   benefit     String?
-  eventId     String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  id          Int         @id @default(autoincrement())
+  eventId     Int
   orderItem   OrderItem[]
   event       Event       @relation(fields: [eventId], references: [id])
 }
 
 model OrderItem {
-  id            String      @id @default(uuid())
-  transactionId String
-  ticketTypeId  String
   quantity      Int
   subTotal      Int
+  id            Int         @id @default(autoincrement())
+  transactionId Int
+  ticketTypeId  Int
   ticketType    TicketType  @relation(fields: [ticketTypeId], references: [id])
   transaction   Transaction @relation(fields: [transactionId], references: [id])
 }
 
 model Transaction {
-  id           String            @id @default(uuid())
-  eventId      String
   totalPrice   Int
   status       TransactionStatus
   paymentProof String?
   createdAt    DateTime          @default(now())
   expiredAt    DateTime?
   updatedAt    DateTime          @updatedAt
-  customerId   String
+  id           Int               @id @default(autoincrement())
+  eventId      Int
+  customerId   Int
   orderItems   OrderItem[]
   user         User              @relation(fields: [customerId], references: [id])
   event        Event             @relation(fields: [eventId], references: [id])
 }
 
 model Review {
-  id        String   @id @default(uuid())
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
-  eventId   String
-  userId    String
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+  userId    Int
   event     Event    @relation(fields: [eventId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
 }
 
 model Voucher {
-  id        String        @id @default(uuid())
   code      String        @unique
   discount  Int
   startDate DateTime
   endDate   DateTime
-  eventId   String
   status    VoucherStatus @default(ACTIVE)
+  id        Int           @id @default(autoincrement())
+  eventId   Int
   event     Event         @relation(fields: [eventId], references: [id])
 }
 
 model Referral {
-  id         String   @id @default(uuid())
   createdAt  DateTime @default(now())
-  referrerId String
-  referredId String   @unique
+  id         Int      @id @default(autoincrement())
+  referrerId Int
+  referredId Int      @unique
   coupon     Coupon?
   referred   User     @relation("Referred", fields: [referredId], references: [id])
   referrer   User     @relation("Referrer", fields: [referrerId], references: [id])
 }
 
 model Coupon {
-  id         String    @id @default(uuid())
   discount   Int
   expiresAt  DateTime
-  referralId String    @unique
   isUsed     Boolean   @default(false)
   useAt      DateTime?
+  id         Int       @id @default(autoincrement())
+  referralId Int       @unique
   referral   Referral  @relation(fields: [referralId], references: [id])
 }
 
 model Point {
-  id        String   @id @default(uuid())
-  userId    String
   amount    Int
   expiresAt DateTime
   createdAt DateTime @default(now())
   isUsed    Boolean  @default(false)
+  id        Int      @id @default(autoincrement())
+  userId    Int
   user      User     @relation(fields: [userId], references: [id])
-}
-
-enum Role {
-  CUSTOMER
-  ORGANIZER
 }
 
 enum Gender {
   MALE
   FEMALE
+}
+
+enum RoleName {
+  CUSTOMER
+  ORGANIZER
 }
 
 enum EventStatus {
