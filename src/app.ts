@@ -10,33 +10,40 @@ import { ErrorMsg } from "./constants/errorMessage.enum";
 const PORT: string = process.env.PORT || "8181";
 
 class App {
-  public app: Application;
+    public app: Application;
 
-  constructor() {
-    this.app = express();
-    this.configure();
-    this.route();
-    this.errorHandler();
-  }
+    constructor() {
+        this.app = express();
+        this.configure();
+        this.route();
+        this.errorHandler();
+    }
 
-  private configure = (): void => {
-    this.app.use(cors());
-    this.app.use(express.json());
-  };
+    private configure = (): void => {
+        this.app.use(cors());
+        this.app.use(express.json());
+    };
 
-  private route = (): void => {
-    const authrouter: AuthRouter = new AuthRouter();
-    this.app.get("/", (req: Request, res: Response, next: NextFunction) => {
-      res.status(200).send("<h1>Test Tiket Backend</h1>");
-    });
+    private route = (): void => {
+        const authrouter: AuthRouter = new AuthRouter();
+        this.app.get("/", (req: Request, res: Response, next: NextFunction) => {
+            res.status(200).send("<h1>Test Tiket Backend</h1>");
+        });
 
-    this.app.use("/auth", authrouter.getRouter());
+        this.app.use("/auth", authrouter.getRouter());
 
-    //erorr buat jika route tidak ketemu
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
-      next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
-    });
-  };
+        //erorr buat jika route tidak ketemu
+        this.app.use((req: Request, res: Response, next: NextFunction) => {
+            next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
+        });
+    };
+
+    private errorHandler = (): void => {
+        this.app.use(
+            //express tau kalo ini error handler dari 4 parameter ini error,req,res,next
+            (error: unknown, req: Request, res: Response, next: NextFunction) => {
+                console.error(error);
+
 
   private errorHandler = (): void => {
     this.app.use(
@@ -58,16 +65,9 @@ class App {
             success: false,
             message: error instanceof Error ? error : ErrorMsg.UNKNOWN_ERROR,
           },
-        });
-      }
-    );
-  };
 
-  public start = (): void => {
-    this.app.listen(PORT, () => {
-      console.log(`API RUNNING: http://localhost:${PORT}`);
-    });
-  };
+        });
+    };
 }
 
 export default App;

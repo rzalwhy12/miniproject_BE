@@ -57,6 +57,7 @@ enum VoucherStatus {
 }
 
 model User {
+
   id           Int        @id @default(autoincrement())
   username     String     @unique
   email        String     @unique
@@ -93,21 +94,20 @@ model UserRole {
   role     Role    @relation(fields: [roleId], references: [id])
   roleId   Int
   isActive Boolean @default(false)
+
 }
 
 model Event {
   id              Int           @id @default(autoincrement())
   name            String
   description     String?
-  syaratKetentuan String?
-  category        EventCategory
-  eventTags       EventTag[]
   startDate       DateTime
   endDate         DateTime
-  location        String
-  statusEvent     EventStatus
   createdAt       DateTime      @default(now())
+  organizerId     String
+  location        String
   updatedAt       DateTime      @updatedAt
+
 
   organizer   User @relation(fields: [organizerId], references: [id])
   organizerId Int
@@ -117,6 +117,7 @@ model Event {
   reviews      Review[]
   ticketTypes  TicketType[]
 
+
   @@index([category, startDate])
   @@index([organizerId])
 }
@@ -124,29 +125,36 @@ model Event {
 model Tag {
   id        Int        @id @default(autoincrement())
   name      String     @unique
-  eventTags EventTag[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  eventTags EventTag[]
 }
 
 model EventTag {
+
   event     Event    @relation(fields: [eventId], references: [id])
   eventId   Int
   tag       Tag      @relation(fields: [tagId], references: [id])
   tagId     Int
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id])
+  tag       Tag      @relation(fields: [tagId], references: [id])
 
   @@id([eventId, tagId])
 }
 
 model TicketType {
+
   id          Int      @id @default(autoincrement())
+
   name        String
   price       Int
   quota       Int
   description String?
   benefit     String?
+
   event       Event    @relation(fields: [eventId], references: [id])
   eventId     Int
   createdAt   DateTime @default(now())
@@ -171,14 +179,16 @@ model Transaction {
   customerId   Int
   event        Event             @relation(fields: [eventId], references: [id])
   eventId      Int
+
   status       TransactionStatus
   paymentProof String?
-  totalPrice   Int
-  expiredAt    DateTime?
   createdAt    DateTime          @default(now())
+  expiredAt    DateTime?
   updatedAt    DateTime          @updatedAt
 
+
   orderItems OrderItem[]
+
 }
 
 model Review {
@@ -187,19 +197,21 @@ model Review {
   comment   String?
   createdAt DateTime @default(now())
 
+
   event   Event @relation(fields: [eventId], references: [id])
   eventId Int
   user    User  @relation(fields: [userId], references: [id])
   userId  Int
+
 }
 
 model Voucher {
   id        Int           @id @default(autoincrement())
   code      String        @unique
   discount  Int
-  status    VoucherStatus @default(ACTIVE)
   startDate DateTime
   endDate   DateTime
+
 
   event   Event @relation(fields: [eventId], references: [id])
   eventId Int
@@ -216,6 +228,7 @@ model Referral {
   referredId Int  @unique //menerima
 
   coupon Coupon?
+
 }
 
 //coupon saat daftar 10%
@@ -223,18 +236,72 @@ model Coupon {
   id         Int       @id @default(autoincrement())
   discount   Int
   expiresAt  DateTime
+
   isUsed     Boolean   @default(false)
   referral   Referral  @relation(fields: [referralId], references: [id])
   referralId Int       @unique
+
   useAt      DateTime?
+  referral   Referral  @relation(fields: [referralId], references: [id])
 }
 
 model Point {
+
   id        Int      @id @default(autoincrement())
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
   isUsed    Boolean  @default(false)
+
   amount    Int
   expiresAt DateTime
   createdAt DateTime @default(now())
+  isUsed    Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  CUSTOMER
+  ORGANIZER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum EventStatus {
+  PUBLISHED
+  DRAFT
+  PAST
+}
+
+enum EventCategory {
+  CONFERENCE
+  WORKSHOP
+  SEMINAR
+  BOOTCAMP
+  COMPETITION
+  FESTIVAL
+  MUSIC
+  SPORTS
+  TECH
+  ART
+  EDUCATION
+  CHARITY
+  LAINNYA
+}
+
+enum TransactionStatus {
+  WAITING_PAYMENT
+  WAITING_CONFIRMATION
+  DONE
+  REJECTED
+  EXPIRED
+  CANCELED
+}
+
+enum VoucherStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
 }
