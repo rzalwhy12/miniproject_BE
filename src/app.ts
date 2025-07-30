@@ -46,29 +46,29 @@ class App {
             (error: unknown, req: Request, res: Response, next: NextFunction) => {
                 console.error(error);
 
-                if (error instanceof AppError) {
-                    return res.status(error.rc).json({
-                        result: {
-                            success: error.success,
-                            message: error.message,
-                            arrVallidationErr: error.arrValidationErr,
-                        },
-                    });
-                }
 
-                return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
-                    result: {
-                        success: false,
-                        message: error instanceof Error ? error.message : ErrorMsg.UNKNOWN_ERROR,
-                    },
-                });
-            }
-        );
-    };
 
-    public start = (): void => {
-        this.app.listen(PORT, () => {
-            console.log(`API RUNNING: http://localhost:${PORT}`);
+  private errorHandler = (): void => {
+    this.app.use(
+      //express tau kalo ini error handler dari 4 parameter ini error,req,res,next
+      (error: unknown, req: Request, res: Response, next: NextFunction) => {
+        //handle erorr dari app error
+        if (error instanceof AppError) {
+          return res.status(error.rc).json({
+            result: {
+              success: error.success,
+              message: error.message,
+              arrVallidationErr: error.arrValidationErr,
+            },
+          });
+        }
+        //error lain
+        return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+          result: {
+            success: false,
+            message: error instanceof Error ? error : ErrorMsg.UNKNOWN_ERROR,
+          },
+
         });
     };
 }
