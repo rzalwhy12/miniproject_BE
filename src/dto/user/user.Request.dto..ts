@@ -9,6 +9,7 @@ export interface ISignUpDTO {
 }
 
 export interface IFindAccount {
+  id?: number;
   email?: string;
   username?: string;
   referral?: string;
@@ -30,4 +31,14 @@ export interface IDataPoint {
   isUsed?: boolean;
   amount: number;
   expiresAt: Date;
+}
+
+export interface IUpdateUser {
+  id: number;
+  username?: string;
+  email?: string;
+  noTlp?: string;
+  birthDate?: string;
+  gender?: Gender;
+  profileImage?: string;
 }

@@ -6,6 +6,9 @@ import { StatusCode } from "../constants/statusCode.enum";
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { sendResSuccess } from "../utils/sendResSuccess";
 import { mapUserToDTO } from "../mappers/user.mapper";
+import { sendEmail } from "../utils/sendEmail";
+import { generateToken } from "../utils/generateToken";
+import { RoleName } from "../../prisma/generated/client";
 
 //controller tugasnya unutk mengirim response saja
 class AuthController {
@@ -20,61 +23,49 @@ class AuthController {
     }
   };
   //live check exist email dan username controller
-  public isEmailExist = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const isExist = await this.authService.isExist(req.body);
-      if (isExist) {
-        throw new AppError(ErrorMsg.EMAIL_ALREADY_USED, StatusCode.CONFLICT);
-      }
-      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public isUsernameExist = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const isExist = await this.authService.isExist(req.body);
-      console.log(isExist);
-      if (isExist) {
-        throw new AppError(ErrorMsg.USERNAME_ALREADY_USED, StatusCode.CONFLICT);
-      }
-      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
-    } catch (error) {
-      next(error);
-    }
-  };
 
   public login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, username, password } = req.body;
+      const { email, username, password, remeberMe } = req.body;
       const data = await this.authService.loginUser(
         { email, username },
         password
       );
 
-      if (data.comparePassword) {
-        sendResSuccess(
-          res,
-          SuccessMsg.USER_LOGGED_IN,
-          StatusCode.OK,
-          mapUserToDTO(data.user)
+      if (!data.comparePassword) {
+        throw new AppError(
+          ErrorMsg.INVALID_EMAIL_OR_PASSWORD,
+          StatusCode.UNAUTHORIZED
         );
       }
-      throw new AppError(
-        ErrorMsg.INVALID_EMAIL_OR_PASSWORD,
-        StatusCode.NOT_FOUND
+
+      const token = generateToken(
+        {
+          id: data.user.id,
+          email: data.user.email,
+          isverified: data.user.isVerified,
+          activeRole: RoleName.CUSTOMER,
+        },
+        remeberMe ? "7h" : "1h"
       );
-    } catch (error) {
-      next(error);
+
+      if (!token) {
+        throw new AppError(
+          ErrorMsg.INTERNAL_SERVER_ERROR,
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+      console.log(data.user, token, req.body);
+
+      sendResSuccess(
+        res,
+        SuccessMsg.USER_LOGGED_IN,
+        StatusCode.OK,
+        mapUserToDTO(data.user),
+        token
+      );
+    } catch (err) {
+      next(err);
     }
   };
 
@@ -84,8 +75,34 @@ class AuthController {
     next: NextFunction
   ) => {
     try {
-      const isVerify = await this.authService.verifyUser(res.locals.decript);
-      sendResSuccess(res, SuccessMsg.EMAIL_VERIFIED, StatusCode.OK);
+      const isVerify = await this.authService.verifyUser(res.locals.decript.id);
+      if (isVerify) {
+        sendResSuccess(res, SuccessMsg.EMAIL_VERIFIED, StatusCode.OK);
+      }
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public keepLogin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const data = await this.authService.keepLogin(res.locals.decript.id);
+      if (!data) {
+        throw new AppError(
+          ErrorMsg.INTERNAL_SERVER_ERROR,
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+      sendResSuccess(
+        res,
+        SuccessMsg.USER_LOGGED_IN,
+        StatusCode.OK,
+        mapUserToDTO(data)
+      );
     } catch (error) {
       next(error);
     }

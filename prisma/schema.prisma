@@ -75,9 +75,9 @@ model User {
   events            Event[]
   transactions      Transaction[]
   reviews           Review[]
-  referralsGiven    Referral[]    @relation("Referrer")
-  referralsReceived Referral[]    @relation("Referred")
-  points            Point[]
+  referralsGiven    Referral[]    @relation("Referrer") //sdh
+  referralsReceived Referral[]    @relation("Referred") //sdh
+  points            Point[] //sdh
 }
 
 model Role {

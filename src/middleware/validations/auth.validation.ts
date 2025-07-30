@@ -1,12 +1,15 @@
 import { body } from "express-validator";
 import { validationHandler } from "../validationHandler/validationHandler";
-import { Gender } from "../../../prisma/generated/client";
 
 class AuthValidator {
   public signUpValidation = [
     body("name").notEmpty().withMessage("name is required"),
 
-    body("username").notEmpty().withMessage("username is required"),
+    body("username")
+      .notEmpty()
+      .withMessage("Username is required")
+      .matches(/^\S+$/)
+      .withMessage("Username must not contain spaces"),
 
     body("email")
       .notEmpty()
@@ -25,21 +28,6 @@ class AuthValidator {
         minSymbols: 1,
       })
       .withMessage("password is not strong enough"),
-    validationHandler,
-  ];
-
-  public isEmailExistValidation = [
-    body("email")
-      .notEmpty()
-      .withMessage("email is required")
-      .isEmail()
-      .withMessage("email is not valid"),
-
-    validationHandler,
-  ];
-
-  public isUsernameExistValidation = [
-    body("username").notEmpty().withMessage("username is required"),
     validationHandler,
   ];
 

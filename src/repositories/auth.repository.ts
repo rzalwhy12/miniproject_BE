@@ -5,6 +5,7 @@ import {
   IDataReferral,
   IFindAccount,
   ISignUpDTO,
+  IUpdateUser,
 } from "../dto/user/user.Request.dto.";
 import { generateReferralCode } from "../utils/generateReferralCode";
 import { hashPassword } from "../utils/hash";
@@ -20,8 +21,16 @@ class AuthRepository {
       },
     });
   };
+  public addRole = async (userId: number, roleId: number) => {
+    return await prisma.userRole.create({
+      data: {
+        userId,
+        roleId, //default role 2 yaitu customer
+      },
+    });
+  };
   public findAccount = async (dataFindUnique: IFindAccount) => {
-    const { email, username, referral } = dataFindUnique;
+    const { id, email, username, referral } = dataFindUnique;
     if (email) {
       return await prisma.user.findUnique({ where: { email } });
     }
@@ -33,6 +42,11 @@ class AuthRepository {
     if (referral) {
       return await prisma.user.findUnique({
         where: { referralCode: referral },
+      });
+    }
+    if (id) {
+      return await prisma.user.findUnique({
+        where: { id },
       });
     }
 
@@ -60,6 +74,14 @@ class AuthRepository {
       data: {
         ...dataPoint,
       },
+    });
+  };
+  public updateUser = async (dataUser: IUpdateUser) => {
+    return await prisma.user.update({
+      where: {
+        id: dataUser.id,
+      },
+      data: { ...dataUser },
     });
   };
 }

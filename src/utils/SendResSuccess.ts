@@ -8,9 +8,10 @@ export const sendResSuccess = <T>(
   res: Response,
   message: SuccessMsg,
   statusCode: StatusCode,
-  data?: T
+  data?: T,
+  token?: string
 ) => {
   return res.status(statusCode).json({
-    result: { success: true, message, data },
+    result: { success: true, message, data, token },
   });
 };

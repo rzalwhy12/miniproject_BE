@@ -29,22 +29,13 @@ class AuthRouter {
       this.authController.signUp
     );
     this.route.post(
-      "/check-email",
-      this.authValidator.isEmailExistValidation,
-      this.authController.isEmailExist
-    );
-    this.route.post(
-      "/check-username",
-      this.authValidator.isUsernameExistValidation,
-      this.authController.isUsernameExist
-    );
-    this.route.post(
       "/login",
       this.authValidator.loginValidation,
       this.authController.login
     );
-    this.route.use(verifyToken);
+    this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
     this.route.get("/verify", this.authController.verifyUser);
+    this.route.get("/keep-login", this.authController.keepLogin);
   };
 
   public getRouter = () => {
