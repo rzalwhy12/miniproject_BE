@@ -1,3 +1,4 @@
+import { RoleName } from "../../prisma/generated/client";
 import { prisma } from "../config/prisma";
 import {
   IDataCoupon,
@@ -6,7 +7,7 @@ import {
   IFindAccount,
   ISignUpDTO,
   IUpdateUser,
-} from "../dto/user/user.Request.dto.";
+} from "../dto/userReq.dto";
 import { generateReferralCode } from "../utils/generateReferralCode";
 import { hashPassword } from "../utils/hash";
 
@@ -21,38 +22,71 @@ class AuthRepository {
       },
     });
   };
-  public addRole = async (userId: number, roleId: number) => {
-    return await prisma.userRole.create({
-      data: {
-        userId,
-        roleId, //default role 2 yaitu customer
+  public addRole = async (userId: number) => {
+    const roles = await prisma.role.findMany({
+      where: {
+        name: { in: [RoleName.CUSTOMER, RoleName.ORGANIZER] },
       },
     });
+
+    const customer = roles.find((r) => r.name === RoleName.CUSTOMER);
+    const organizer = roles.find((r) => r.name === RoleName.ORGANIZER);
+
+    if (!customer || !organizer) {
+      throw new Error("Roles not found");
+    }
+
+    return await prisma.userRole.createMany({
+      data: [
+        { userId, roleId: customer.id, isActive: true },
+        { userId, roleId: organizer.id, isActive: false },
+      ],
+    });
   };
+
   public findAccount = async (dataFindUnique: IFindAccount) => {
     const { id, email, username, referral } = dataFindUnique;
+
     if (email) {
-      return await prisma.user.findUnique({ where: { email } });
+      return await prisma.user.findUnique({
+        where: { email },
+        include: {
+          roles: { include: { role: true } },
+        },
+      });
     }
 
     if (username) {
-      return await prisma.user.findUnique({ where: { username } });
+      return await prisma.user.findUnique({
+        where: { username },
+        include: {
+          roles: { include: { role: true } },
+        },
+      });
     }
 
     if (referral) {
       return await prisma.user.findUnique({
         where: { referralCode: referral },
+        include: {
+          roles: { include: { role: true } },
+        },
       });
     }
+
     if (id) {
       return await prisma.user.findUnique({
         where: { id },
+        include: {
+          roles: { include: { role: true } },
+        },
       });
     }
 
     return null;
   };
-  public AddReferral = async (dataReferal: IDataReferral) => {
+
+  public addReferral = async (dataReferal: IDataReferral) => {
     return await prisma.referral.create({
       data: {
         ...dataReferal,
@@ -62,14 +96,14 @@ class AuthRepository {
       },
     });
   };
-  public AddCoupon = async (dataCoupon: IDataCoupon) => {
+  public addCoupon = async (dataCoupon: IDataCoupon) => {
     return await prisma.coupon.create({
       data: {
         ...dataCoupon,
       },
     });
   };
-  public AddPoint = async (dataPoint: IDataPoint) => {
+  public addPoint = async (dataPoint: IDataPoint) => {
     return await prisma.point.create({
       data: {
         ...dataPoint,
@@ -90,9 +124,38 @@ class AuthRepository {
         id,
       },
       data: {
-        password,
+        password: await hashPassword(password),
       },
     });
+  };
+  public switchRoleRepo = async (userId: number, targetRoleId: number) => {
+    // 1. Set semua role user jadi tidak aktif
+    await prisma.userRole.updateMany({
+      where: { userId },
+      data: { isActive: false },
+    });
+
+    // 2. Aktifkan role yang dipilih
+    await prisma.userRole.updateMany({
+      where: { userId, roleId: targetRoleId },
+      data: { isActive: true },
+    });
+
+    // 3. Ambil role aktif
+    const activeRole = await prisma.userRole.findFirst({
+      where: { userId, isActive: true },
+      include: { role: true },
+    });
+
+    // 4. Return hanya nama role
+    return activeRole?.role.name;
+  };
+  public activeRole = async (userId: number) => {
+    const active = await prisma.userRole.findFirst({
+      where: { userId, isActive: true },
+      include: { role: true },
+    });
+    return active?.role.name;
   };
 }
 

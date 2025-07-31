@@ -16,4 +16,9 @@ export enum ErrorMsg {
   UNKNOWN_ERROR = "Unknown errror",
   REFERRAL_GIVEN_NOT_FOUND = "ReferralCode not found",
   EMAIL_NOT_FOUND = "Email not Found",
+  CANNOT_GET_DATA = "Cannot get data user",
+
+  //Event
+  FAILD_CREATE_EVENT = "Faild Create Event",
+  MUST_BE_ORGANIZER = "Must Be Organizer",
 }

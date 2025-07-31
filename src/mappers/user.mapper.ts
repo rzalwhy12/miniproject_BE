@@ -1,10 +1,14 @@
 import { User } from "../../prisma/generated/client";
-import { IUserDTO } from "../dto/user/userResponse.dto";
 
 //function unutk reassign user scema ke interface user yang buat dikirim ke FE
-export const mapUserToDTO = (user: User): IUserDTO => {
+export const mapUserToDTO = (user: User) => {
   return {
     name: user.name,
+    email: user.name,
+    noTlp: user.noTlp,
+    birthDate: user.birthDate,
+    gender: user.gender,
+    profileImage: user.profileImage,
     username: user.username,
   };
 };

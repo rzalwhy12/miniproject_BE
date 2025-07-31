@@ -1,35 +1,72 @@
 import { prisma } from "../config/prisma";
-import { Event } from "../../prisma/generated/client";
+import { IEventCreate } from "../dto/eventReq.dto";
 
-export class EventRepository {
-    async create(data: Omit<Event, "id" | "createdAt" | "updatedAt">) {
-        // Validate required fields before creating
-        if (!data.name || !data.startDate || !data.endDate || !data.location) {
-            throw new Error("Missing required fields for event creation");
-        }
-        
-        return prisma.event.create({ 
-            data: {
-                ...data,
-                createdAt: new Date(),
-                updatedAt: new Date()
+class EventRepository {
+  public createEventRepo = async (
+    eventCreate: IEventCreate,
+    organizerId: number
+  ) => {
+    const {
+      name,
+      description,
+      syaratKetentuan,
+      startDate,
+      endDate,
+      location,
+      category,
+      eventStatus,
+      ticketTypes,
+      vouchers,
+    } = eventCreate;
+
+    return await prisma.event.create({
+      data: {
+        name,
+        description,
+        syaratKetentuan,
+        startDate,
+        endDate,
+        location,
+        category,
+        eventStatus,
+        organizerId,
+        ticketTypes: ticketTypes
+          ? {
+              create: ticketTypes.map((ticket) => ({
+                name: ticket.name,
+                price: ticket.price,
+                quota: ticket.quota,
+                descriptionTicket: ticket.descriptionTicket,
+                benefit: ticket.benefit,
+              })),
             }
-        });
-    }
-
-    async update(id: number, data: Partial<Event>) {
-        return prisma.event.update({
-            where: { id },
-            data: {
-                ...data,
-                updatedAt: new Date()
+          : undefined,
+        vouchers: vouchers
+          ? {
+              create: vouchers.map((voucher) => ({
+                code: voucher.code,
+                discount: voucher.discount,
+                startDate: voucher.startDate,
+                endDate: voucher.endDate,
+                status: voucher.status,
+              })),
             }
-        });
-    }
-
-    async delete(id: number) {
-        return prisma.event.delete({
-            where: { id }
-        });
-    }
+          : undefined,
+      },
+      include: {
+        ticketTypes: true,
+        vouchers: true,
+      },
+    });
+  };
+  public uploadBanner = async (eventId: number, banner: string) => {
+    return await prisma.event.update({
+      where: {
+        id: eventId,
+      },
+      data: { banner },
+    });
+  };
 }
+
+export default EventRepository;
