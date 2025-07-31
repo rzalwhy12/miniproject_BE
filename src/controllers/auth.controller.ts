@@ -8,6 +8,8 @@ import { sendResSuccess } from "../utils/SendResSuccess";
 import { mapUserToDTO } from "../mappers/user.mapper";
 import { generateToken } from "../utils/generateToken";
 import { RoleName } from "../../prisma/generated/client";
+import { STATUS_CODES } from "http";
+import App from "../app";
 
 //controller tugasnya unutk mengirim response saja
 class AuthController {
@@ -102,6 +104,46 @@ class AuthController {
         StatusCode.OK,
         mapUserToDTO(data)
       );
+    } catch (error) {
+      next(error);
+    }
+  };
+  public forgetPassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const user = await this.authService.forgetPassword(req.body.email);
+      if (!user) {
+        throw new AppError(
+          ErrorMsg.INTERNAL_SERVER_ERROR,
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.UNAUTHORIZED);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public resetPassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const user = await this.authService.resetPassword(
+        res.locals.decript.id,
+        req.body.password
+      );
+      if (!user) {
+        throw new AppError(
+          ErrorMsg.INTERNAL_SERVER_ERROR,
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
     } catch (error) {
       next(error);
     }

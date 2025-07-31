@@ -84,6 +84,16 @@ class AuthRepository {
       data: { ...dataUser },
     });
   };
+  public resetPassword = async (id: number, password: string) => {
+    return await prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        password,
+      },
+    });
+  };
 }
 
 export default AuthRepository;
