@@ -2,12 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import { EventService } from "../services/event.services";
 import AppError from "../errors/AppError";
 import { StatusCode } from "../constants/statusCode.enum";
+
 import { cloudinaryUpload } from "../config/cloudinary";
 
 const eventService = new EventService();
 
 export class EventController {
-  public create = async (req: Request, res: Response, next: NextFunction) => {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       console.log("Request body:", req.body);
       console.log("Request file:", req.file);
@@ -99,7 +100,7 @@ export class EventController {
       console.error("Event creation error:", err);
       next(err);
     }
-  };
+  }
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {

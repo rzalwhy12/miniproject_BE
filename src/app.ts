@@ -9,6 +9,8 @@ import AppError from "./errors/AppError";
 import { StatusCode } from "./constants/statusCode.enum";
 import { ErrorMsg } from "./constants/errorMessage.enum";
 import { Prisma } from "../prisma/generated/client";
+import { TokenExpiredError } from "jsonwebtoken";
+import { Result } from "express-validator";
 
 const PORT: string = process.env.PORT || "8181";
 
@@ -55,7 +57,7 @@ class App {
             },
           });
         }
-
+        //error handle unutk prisam uniqie
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
             const target = error.meta?.target as string[];
@@ -67,6 +69,15 @@ class App {
               },
             });
           }
+        }
+        //error handle unutk TokenExiperd
+        if (error instanceof TokenExpiredError) {
+          return res.status(StatusCode.UNAUTHORIZED).json({
+            result: {
+              success: false,
+              message: ErrorMsg.TOKEN_EXPIRED,
+            },
+          });
         }
 
         const message =

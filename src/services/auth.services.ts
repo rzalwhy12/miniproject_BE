@@ -10,6 +10,7 @@ import { sendEmail } from "../utils/sendEmail";
 import { verifyEmailTemplate } from "../template/verifyEmail.template";
 import { generateToken } from "../utils/generateToken";
 import { RoleName, User } from "../../prisma/generated/client";
+import { resetPasswordTemplate } from "../template/resetPassword.template";
 
 //logicnya di service
 class AuthServices {
@@ -105,6 +106,27 @@ class AuthServices {
     const user = await this.authRepository.findAccount({
       id,
     });
+    return user;
+  };
+  public forgetPassword = async (email: string) => {
+    const user = await this.authRepository.findAccount({
+      email,
+    });
+    if (!user) {
+      throw new AppError(ErrorMsg.EMAIL_NOT_FOUND, StatusCode.NOT_FOUND);
+    }
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      isverified: user.isVerified,
+    });
+    const urlFE: string = `${process.env.BASIC_URL_FE}/verify/${token}`;
+    const subject: string = "Reset Your Password";
+    sendEmail(user.email, subject, resetPasswordTemplate(user.name, urlFE));
+    return user;
+  };
+  public resetPassword = async (id: number, password: string) => {
+    const user = await this.authRepository.resetPassword(id, password);
     return user;
   };
 }

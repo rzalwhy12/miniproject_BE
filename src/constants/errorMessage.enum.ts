@@ -15,4 +15,5 @@ export enum ErrorMsg {
   SERVER_MISSING_SECRET_KEY = "server error missing secret key",
   UNKNOWN_ERROR = "Unknown errror",
   REFERRAL_GIVEN_NOT_FOUND = "ReferralCode not found",
+  EMAIL_NOT_FOUND = "Email not Found",
 }
