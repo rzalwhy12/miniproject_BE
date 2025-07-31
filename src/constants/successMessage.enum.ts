@@ -8,4 +8,7 @@ export enum SuccessMsg {
   USER_LOGGED_OUT = "User successfully logged out",
   PASSWORD_UPDATED = "Password successfully updated",
   EMAIL_VERIFIED = "Email successfully verified",
+
+  //account
+  UPDATE_DATA_USER = "Update user successfully",
 }

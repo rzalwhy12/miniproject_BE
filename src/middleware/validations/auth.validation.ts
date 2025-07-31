@@ -36,6 +36,28 @@ class AuthValidator {
 
     validationHandler,
   ];
+  public forgetPassword = [
+    body("email")
+      .notEmpty()
+      .withMessage("email is required")
+      .isEmail()
+      .withMessage("email is not valid"),
+    validationHandler,
+  ];
+  public resetPassword = [
+    body("password")
+      .notEmpty()
+      .withMessage("password is required")
+      .isStrongPassword({
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+      })
+      .withMessage("password is not strong enough"),
+    validationHandler,
+  ];
 }
 
 export default AuthValidator;

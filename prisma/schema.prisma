@@ -92,61 +92,46 @@ model UserRole {
   role     Role    @relation(fields: [roleId], references: [id])
   roleId   Int
   isActive Boolean @default(false)
+
+  @@unique([userId, roleId])
 }
 
 model Event {
-  id           Int           @id @default(autoincrement())
-  name         String
-  description  String?
-  startDate    DateTime
-  endDate      DateTime
-  createdAt    DateTime      @default(now())
-  location     String
-  updatedAt    DateTime      @updatedAt
-  organizer    User          @relation(fields: [organizerId], references: [id])
-  organizerId  Int
-  transactions Transaction[]
-  vouchers     Voucher[]
-  reviews      Review[]
-  ticketTypes  TicketType[]
-  eventTags    EventTag[]
-  category     EventCategory
+  id              Int           @id @default(autoincrement())
+  name            String
+  banner          String?
+  description     String?
+  syaratKetentuan String?
+  startDate       DateTime
+  endDate         DateTime
+  createdAt       DateTime      @default(now())
+  location        String
+  updatedAt       DateTime      @updatedAt
+  organizer       User          @relation(fields: [organizerId], references: [id])
+  organizerId     Int
+  transactions    Transaction[]
+  vouchers        Voucher[]
+  reviews         Review[]
+  ticketTypes     TicketType[]
+  category        EventCategory
+  eventStatus     EventStatus
 
   @@index([category, startDate])
   @@index([organizerId])
 }
 
-model Tag {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  eventTags EventTag[]
-}
-
-model EventTag {
-  event     Event    @relation(fields: [eventId], references: [id])
-  eventId   Int
-  tag       Tag      @relation(fields: [tagId], references: [id])
-  tagId     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@id([eventId, tagId])
-}
-
 model TicketType {
-  id          Int         @id @default(autoincrement())
-  name        String
-  price       Int
-  quota       Int
-  description String?
-  benefit     String?
-  event       Event       @relation(fields: [eventId], references: [id])
-  eventId     Int
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItem   OrderItem[]
+  id                Int         @id @default(autoincrement())
+  name              String
+  price             Int
+  quota             Int
+  descriptionTicket String?
+  benefit           String?
+  event             Event       @relation(fields: [eventId], references: [id])
+  eventId           Int
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  orderItem         OrderItem[]
 }
 
 model OrderItem {

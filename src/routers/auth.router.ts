@@ -7,18 +7,16 @@ class AuthRouter {
   private route: Router;
 
   //start kontroler deklarasi
-  private authController: AuthController;
+  private authController = new AuthController();
   //end controller deklarasi
 
   //start middleware deklarasi
-  private authValidator: AuthValidator;
+  private authValidator = new AuthValidator();
   //end middleware deklarasi
 
   constructor() {
     //inisialisasi
     this.route = Router();
-    this.authController = new AuthController();
-    this.authValidator = new AuthValidator();
     this.initializeRouter();
   }
   private initializeRouter = (): void => {
@@ -31,11 +29,22 @@ class AuthRouter {
     this.route.post(
       "/login",
       this.authValidator.loginValidation,
-      this.authController.login
+      this.authController.logIn
+    );
+    this.route.post(
+      "/forget-password",
+      this.authValidator.forgetPassword,
+      this.authController.forgetPassword
     );
     this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
     this.route.get("/verify", this.authController.verifyUser);
     this.route.get("/keep-login", this.authController.keepLogin);
+    this.route.post(
+      "/reset-password",
+      this.authValidator.resetPassword,
+      this.authController.resetPassword
+    );
+    this.route.get("/switch-role/:role", this.authController.switchRole);
   };
 
   public getRouter = () => {

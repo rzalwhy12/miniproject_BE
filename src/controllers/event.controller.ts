@@ -1,124 +1,98 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import { EventService } from "../services/event.services";
-import AppError from "../errors/AppError";
+import { sendResSuccess } from "../utils/SendResSuccess";
+import { SuccessMsg } from "../constants/successMessage.enum";
 import { StatusCode } from "../constants/statusCode.enum";
-
+import { RoleName } from "../../prisma/generated/client";
+import AppError from "../errors/AppError";
+import { ErrorMsg } from "../constants/errorMessage.enum";
+import { UploadApiResponse } from "cloudinary";
 import { cloudinaryUpload } from "../config/cloudinary";
+import EventRepository from "../repositories/event.repository";
 
-const eventService = new EventService();
-
-export class EventController {
-  async create(req: Request, res: Response, next: NextFunction) {
+class EventConttroller {
+  private eventService = new EventService();
+  private eventRepository = new EventRepository();
+  //define method
+  public createEvent = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      console.log("Request body:", req.body);
-      console.log("Request file:", req.file);
-      console.log("Required fields check:");
-      console.log("- name:", req.body.name);
-      console.log("- startDate:", req.body.startDate);
-      console.log("- endDate:", req.body.endDate);
-      console.log("- location:", req.body.location);
-
-      // Validate required fields (matching frontend)
-      if (
-        !req.body.name ||
-        !req.body.startDate ||
-        !req.body.endDate ||
-        !req.body.location
-      ) {
-        console.log("Missing fields detected!");
-        throw new AppError("Missing required fields", StatusCode.BAD_REQUEST);
+      if (res.locals.decript.activeRole !== RoleName.ORGANIZER) {
+        throw new AppError(ErrorMsg.MUST_BE_ORGANIZER, StatusCode.UNAUTHORIZED);
       }
-
-      // Handle image upload if present
-      let imageUrl = null;
+      let upload: UploadApiResponse | undefined;
       if (req.file) {
-        console.log(
-          "Image file received:",
-          req.file.originalname,
-          req.file.size
+        upload = await cloudinaryUpload(req.file);
+      }
+      const organizerId = res.locals.decript.id;
+      const event = await this.eventService.createEventService(
+        { ...req.body, banner: upload?.secure_url },
+        organizerId
+      );
+      console.log(event);
+      if (!event) {
+        throw new AppError(
+          ErrorMsg.FAILD_CREATE_EVENT,
+          StatusCode.INTERNAL_SERVER_ERROR
         );
-        try {
-          const uploadResult = await cloudinaryUpload(req.file);
-          imageUrl = uploadResult.secure_url;
-        } catch (error) {
-          console.error("Image upload failed:", error);
-          // Continue without image
-        }
       }
 
-      // Parse tickets if it's a string
-      let tickets = req.body.tickets;
-      if (typeof tickets === "string") {
-        try {
-          tickets = JSON.parse(tickets);
-        } catch (e) {
-          console.error("Error parsing tickets:", e);
-          tickets = [];
-        }
+      if (event) {
+        sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
       }
-
-      // Create proper date objects from frontend format
-      const startDate = new Date(req.body.startDate);
-      const endDate = new Date(req.body.endDate);
-
-      // Validate dates
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        throw new AppError("Invalid date format", StatusCode.BAD_REQUEST);
-      }
-
-      // Transform the request data to match your schema
-      const eventData = {
-        name: req.body.name.toString(),
-        description: req.body.description || null,
-        location: req.body.location.toString(),
-        startDate: startDate,
-        endDate: endDate,
-        statusEvent: req.body.statusEvent || ("PUBLISHED" as const),
-        category: req.body.category || ("LAINNYA" as const),
-        organizerId: 1, // Default organizer ID since no auth
-        syaratKetentuan:
-          req.body.syaratKetentuan || "Syarat dan ketentuan berlaku",
-        image: imageUrl,
-      };
-
-      console.log("Final event data:", eventData);
-
-      const event = await eventService.createEvent(eventData);
-
-      // Create ticket types if provided
-      if (tickets && Array.isArray(tickets)) {
-        console.log("Creating tickets:", tickets);
-        await eventService.createTicketTypes(event.id, tickets);
-      }
-
-      res.status(201).json({
-        success: true,
-        message: "Event created successfully",
-        data: event,
-      });
-    } catch (err) {
-      console.error("Event creation error:", err);
-      next(err);
+    } catch (error) {
+      next(error);
     }
-  }
-
-  async update(req: Request, res: Response, next: NextFunction) {
+  };
+  public uploadBanner = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const id = Number(req.params.id);
-      const event = await eventService.updateEvent(id, req.body);
-      res.json({ success: true, data: event });
-    } catch (err) {
-      next(err);
-    }
-  }
+      if (res.locals.decript.activeRole !== RoleName.ORGANIZER) {
+        throw new AppError(ErrorMsg.MUST_BE_ORGANIZER, StatusCode.UNAUTHORIZED);
+      }
+      let upload: UploadApiResponse | undefined;
+      if (req.file) {
+        upload = await cloudinaryUpload(req.file);
+      }
+      if (!upload) {
+        throw new AppError(
+          ErrorMsg.INTERNAL_SERVER_ERROR,
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+      const event = await this.eventRepository.uploadBanner(
+        parseInt(req.params.eventId),
+        upload?.secure_url
+      );
+      if (!event) {
+        throw new AppError(
+          "Failed to upload banner",
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
 
-  async delete(req: Request, res: Response, next: NextFunction) {
+      if (event) {
+        sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
+      }
+    } catch (error) {}
+  };
+  public updateEvent = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const id = Number(req.params.id);
-      await eventService.deleteEvent(id);
-      res.json({ success: true, message: "Event deleted" });
-    } catch (err) {
-      next(err);
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
+    } catch (error) {
+      next(error);
     }
-  }
+  };
 }
+
+export default EventConttroller;

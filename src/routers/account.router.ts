@@ -1,18 +1,16 @@
 import { Router } from "express";
 import { verifyToken } from "../middleware/verifyToken";
+import AccountController from "../controllers/accounts.controller";
 import { uploadMemory } from "../middleware/uploader";
-import EventConttroller from "../controllers/event.controller";
-import EventValidator from "../middleware/validations/event.validator";
 
-class EventRouter {
+class AccountRouter {
   private route: Router;
 
   //start kontroler deklarasi
-  private eventController = new EventConttroller();
+  private accountController = new AccountController();
   //end controller deklarasi
 
   //start middleware deklarasi
-  private eventValidator = new EventValidator();
   //end middleware deklarasi
 
   constructor() {
@@ -22,15 +20,12 @@ class EventRouter {
   }
   private initializeRouter = (): void => {
     this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
-    this.route.post(
-      "/create",
-      this.eventValidator.createEventValidator,
-      this.eventController.createEvent
-    );
+    this.route.get("/get-data", this.accountController.getDataUser);
+    this.route.patch("/update-data", this.accountController.updateProfile);
     this.route.patch(
-      "/banner/:eventId",
-      uploadMemory().single("banner"),
-      this.eventController.uploadBanner
+      "/update-profile-image",
+      uploadMemory().single("profileImage"),
+      this.accountController.updateProfile
     );
   };
 
@@ -39,4 +34,4 @@ class EventRouter {
   };
 }
 
-export default EventRouter;
+export default AccountRouter;

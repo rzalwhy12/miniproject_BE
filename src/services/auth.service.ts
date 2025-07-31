@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { IFindAccount, ISignUpDTO } from "../dto/user/user.Request.dto.";
+import { IFindAccount, ISignUpDTO } from "../dto/userReq.dto";
 import AuthRepository from "../repositories/auth.repository";
 import AppError from "../errors/AppError";
 import { ErrorMsg } from "../constants/errorMessage.enum";
@@ -36,18 +36,18 @@ class AuthServices {
         );
       }
       newUser = await this.authRepository.createUser(dataSignUp);
-      const referral = await this.authRepository.AddReferral({
+      const referral = await this.authRepository.addReferral({
         referrerId: userGivenReferral.id,
         referredId: newUser.id,
       });
       const expiresAt = dayjs().add(3, "month").toDate();
-      await this.authRepository.AddCoupon({
+      await this.authRepository.addCoupon({
         discount: 10,
         expiresAt,
         referralId: referral.id,
       });
       //point ketika user memberikan referralnya 10.000
-      await this.authRepository.AddPoint({
+      await this.authRepository.addPoint({
         userId: userGivenReferral.id,
         amount: 10000,
         expiresAt,
@@ -68,11 +68,10 @@ class AuthServices {
     }
     const urlFE = `${process.env.BASIC_URL_FE}/verify/${token}`;
     sendEmail(newUser.email, subject, verifyEmailTemplate(newUser.name, urlFE));
-    await this.authRepository.addRole(newUser.id, 2);
+    await this.authRepository.addRole(newUser.id);
     console.log(newUser);
     return newUser;
   };
-
   //live isexist email dan username service
   public isExist = async (field: IFindAccount) => {
     const isExist = await this.authRepository.findAccount(field);
@@ -119,6 +118,7 @@ class AuthServices {
       id: user.id,
       email: user.email,
       isverified: user.isVerified,
+      activeRole: user.roles[0].role.name,
     });
     const urlFE: string = `${process.env.BASIC_URL_FE}/verify/${token}`;
     const subject: string = "Reset Your Password";

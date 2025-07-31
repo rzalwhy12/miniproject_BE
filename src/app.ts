@@ -4,13 +4,13 @@ dotenv.config();
 import cors from "cors";
 import express, { Application, NextFunction, Request, Response } from "express";
 import AuthRouter from "./routers/auth.router";
-import eventRouter from "./routers/event.router";
 import AppError from "./errors/AppError";
 import { StatusCode } from "./constants/statusCode.enum";
 import { ErrorMsg } from "./constants/errorMessage.enum";
 import { Prisma } from "../prisma/generated/client";
 import { TokenExpiredError } from "jsonwebtoken";
-import { Result } from "express-validator";
+import AccountRouter from "./routers/account.router";
+import EventRouter from "./routers/event.router";
 
 const PORT: string = process.env.PORT || "8181";
 
@@ -26,21 +26,24 @@ class App {
 
   private configure = (): void => {
     this.app.use(cors());
-    this.app.use(express.json({ limit: "10mb" }));
-    this.app.use(express.urlencoded({ limit: "10mb", extended: true }));
-    this.start();
+    this.app.use(express.json());
   };
 
   private route = (): void => {
     const authrouter: AuthRouter = new AuthRouter();
+    const accountRouter: AccountRouter = new AccountRouter();
+    const eventRouter: EventRouter = new EventRouter();
 
     this.app.get("/", (req: Request, res: Response) => {
       res.status(200).send("<h1>Test Tiket Backend</h1>");
     });
-
-    this.app.use("/auth", authrouter.getRouter());
-    this.app.use("/events", eventRouter);
-
+    //fendry define path rule start
+    this.app.use("/auth", authrouter.getRouter()); //jangan lupa tanda kurung buat jalanin methodnya
+    this.app.use("/account", accountRouter.getRouter());
+    //end
+    //risal define path rule start
+    this.app.use("/event", eventRouter.getRouter());
+    //end
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
     });
@@ -76,6 +79,19 @@ class App {
             result: {
               success: false,
               message: ErrorMsg.TOKEN_EXPIRED,
+            },
+          });
+        }
+        // error unutk cloudinary upload
+        if (
+          error instanceof Error &&
+          error.name === "Error" &&
+          error.message?.toLowerCase().includes("cloudinary")
+        ) {
+          return res.status(500).json({
+            result: {
+              success: false,
+              message: "Cloudinary upload failed. Please try again later.",
             },
           });
         }
