@@ -6,7 +6,6 @@ import { StatusCode } from "../constants/statusCode.enum";
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { sendResSuccess } from "../utils/SendResSuccess";
 import { mapUserToDTO } from "../mappers/user.mapper";
-import { sendEmail } from "../utils/sendEmail";
 import { generateToken } from "../utils/generateToken";
 import { RoleName } from "../../prisma/generated/client";
 
