@@ -1,24 +1,30 @@
 import TransactionService from "../services/transaction.service";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { IOrderCreateReq } from "../dto/transacionReq.dto";
+import { StatusCode } from "../constants/statusCode.enum";
+import AppError from "../errors/AppError";
+import { ErrorMsg } from "../constants/errorMessage.enum";
+import { sendResSuccess } from "../utils/SendResSuccess";
+import { SuccessMsg } from "../constants/successMessage.enum";
 
 class TransactionController {
   private transactionService = new TransactionService();
 
-  public orderItem = async (req: Request, res: Response) => {
+  public orderItem = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const user = (req as any).user; // casting agar tidak error typescript
-      if (!user || !user.id) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Unauthorized" });
+      const userId = res.locals.decript.id;
+      if (!userId) {
+        throw new AppError(ErrorMsg.UNAUTHORIZED, StatusCode.UNAUTHORIZED);
       }
-      const userId = user.id;
       const data: IOrderCreateReq = req.body;
       const result = await this.transactionService.orderItem(userId, data);
-      res.status(201).json({ success: true, data: result });
-    } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, result);
+    } catch (error) {
+      next(error);
     }
   };
 }
