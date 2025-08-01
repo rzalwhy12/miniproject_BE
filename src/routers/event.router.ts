@@ -15,24 +15,34 @@ class EventRouter {
     private eventValidator = new EventValidator();
     //end middleware deklarasi
 
-    constructor() {
-        //inisialisasi
-        this.route = Router();
-        this.initializeRouter();
-    }
-    private initializeRouter = (): void => {
-        this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
-        this.route.post(
-            "/create",
-            this.eventValidator.createEventValidator,
-            this.eventController.createEvent
-        );
-        this.route.patch(
-            "/banner/:eventId",
-            uploadMemory().single("banner"),
-            this.eventController.uploadBanner
-        );
-    };
+
+  constructor() {
+    //inisialisasi
+    this.route = Router();
+    this.initializeRouter();
+  }
+  private initializeRouter = (): void => {
+    this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
+    this.route.post(
+      "/create",
+      this.eventValidator.createEventValidator,
+      this.eventController.createEvent
+    );
+    //route upload banner dipakai barengan sama create atau update
+    this.route.patch(
+      "/banner/:eventId",
+      uploadMemory().single("banner"),
+      this.eventController.uploadBanner
+    );
+    this.route.patch(
+      "/update/:eventId",
+      this.eventValidator.createEventValidator,
+      this.eventController.updateEvent
+    );
+    this.route.delete("/delete/:eventId", this.eventController.deleteEvent);
+  };
+
+
 
     public getRouter = () => {
         return this.route;

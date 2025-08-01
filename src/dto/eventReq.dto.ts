@@ -4,7 +4,7 @@ import {
   VoucherStatus,
 } from "../../prisma/generated/client";
 
-export interface ITicketTypeCreate {
+export interface IDataTicketType {
   name: string;
   price: number;
   quota: number;
@@ -12,15 +12,14 @@ export interface ITicketTypeCreate {
   benefit: string;
 }
 
-export interface IVoucherCreate {
-  code: string;
+export interface IDataVoucher {
   discount: number;
   startDate: Date;
   endDate: Date;
   status: VoucherStatus;
 }
 
-export interface IEventCreate {
+export interface IDataEvent {
   name: string;
   description: string;
   syaratKetentuan?: string;
@@ -29,6 +28,6 @@ export interface IEventCreate {
   location: string;
   category: EventCategory;
   eventStatus: EventStatus;
-  ticketTypes?: ITicketTypeCreate[];
-  vouchers?: IVoucherCreate[];
+  ticketTypes?: IDataTicketType[];
+  vouchers?: IDataVoucher[];
 }

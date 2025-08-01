@@ -1,6 +1,6 @@
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { StatusCode } from "../constants/statusCode.enum";
-import { IEventCreate } from "../dto/eventReq.dto";
+import { IDataEvent } from "../dto/eventReq.dto";
 import AppError from "../errors/AppError";
 import eventRepository from "../repositories/event.repository";
 
@@ -8,7 +8,7 @@ export class EventService {
   private eventRepository = new eventRepository();
 
   public createEventService = async (
-    dataEvent: IEventCreate,
+    dataEvent: IDataEvent,
     organizerId: number
   ) => {
     const created = await this.eventRepository.createEventRepo(
@@ -22,5 +22,22 @@ export class EventService {
       );
     }
     return created;
+  };
+  public updateEventService = async (
+    eventId: number,
+    dataEvent: IDataEvent
+  ) => {
+    const updatedEvent = await this.eventRepository.updateEventRepo(
+      eventId,
+      dataEvent
+    );
+
+    if (!updatedEvent) {
+      throw new AppError(
+        ErrorMsg.FAILD_CREATE_EVENT,
+        StatusCode.INTERNAL_SERVER_ERROR
+      );
+    }
+    return updatedEvent;
   };
 }

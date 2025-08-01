@@ -23,13 +23,10 @@ class EventConttroller {
       if (res.locals.decript.activeRole !== RoleName.ORGANIZER) {
         throw new AppError(ErrorMsg.MUST_BE_ORGANIZER, StatusCode.UNAUTHORIZED);
       }
-      let upload: UploadApiResponse | undefined;
-      if (req.file) {
-        upload = await cloudinaryUpload(req.file);
-      }
+
       const organizerId = res.locals.decript.id;
       const event = await this.eventService.createEventService(
-        { ...req.body, banner: upload?.secure_url },
+        { ...req.body },
         organizerId
       );
       console.log(event);
@@ -88,7 +85,69 @@ class EventConttroller {
     next: NextFunction
   ) => {
     try {
-      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
+      if (res.locals.decript.activeRole !== RoleName.ORGANIZER) {
+        throw new AppError(ErrorMsg.MUST_BE_ORGANIZER, StatusCode.UNAUTHORIZED);
+      }
+
+      const eventId = parseInt(req.params.eventId);
+      const organizerId = res.locals.decript.id;
+
+      const isOwner = await this.eventRepository.isOwnerEvent(
+        organizerId,
+        eventId
+      );
+
+      if (!isOwner) {
+        throw new AppError("your not the owner", StatusCode.UNAUTHORIZED);
+      }
+
+      if (isNaN(eventId)) {
+        throw new AppError("Invalid event ID", StatusCode.BAD_REQUEST);
+      }
+
+      const updatedEventData = {
+        ...req.body,
+      };
+
+      const result = await this.eventRepository.updateEventRepo(
+        eventId,
+        updatedEventData
+      );
+
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, result);
+    } catch (error) {
+      next(error);
+    }
+  };
+  public deleteEvent = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (res.locals.decript.activeRole !== RoleName.ORGANIZER) {
+        throw new AppError(ErrorMsg.MUST_BE_ORGANIZER, StatusCode.UNAUTHORIZED);
+      }
+
+      const eventId = parseInt(req.params.eventId);
+      const organizerId = res.locals.decript.id;
+
+      const isOwner = await this.eventRepository.isOwnerEvent(
+        organizerId,
+        eventId
+      );
+
+      if (!isOwner) {
+        throw new AppError("your not the owner", StatusCode.UNAUTHORIZED);
+      }
+
+      if (isNaN(eventId)) {
+        throw new AppError("Invalid event ID", StatusCode.BAD_REQUEST);
+      }
+
+      const result = await this.eventRepository.deleteEvent(eventId);
+
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, result);
     } catch (error) {
       next(error);
     }

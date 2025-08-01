@@ -153,7 +153,7 @@ class AuthController {
       const targetRole = parseInt(req.params.role);
 
       if (isNaN(targetRole)) {
-        throw new AppError("Invalid role ID", StatusCode.BAD_REQUEST);
+        throw new AppError(ErrorMsg.INVALID_ROLE_ID, StatusCode.BAD_REQUEST);
       }
 
       const userId = res.locals.decript.id;

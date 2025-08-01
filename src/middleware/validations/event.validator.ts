@@ -91,11 +91,6 @@ class EventValidator {
       .isArray()
       .withMessage("Vouchers must be an array"),
 
-    body("vouchers.*.code")
-      .optional()
-      .notEmpty()
-      .withMessage("Voucher code is required"),
-
     body("vouchers.*.discount")
       .optional()
       .isInt({ min: 0 })

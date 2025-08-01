@@ -17,8 +17,10 @@ export enum ErrorMsg {
   REFERRAL_GIVEN_NOT_FOUND = "ReferralCode not found",
   EMAIL_NOT_FOUND = "Email not Found",
   CANNOT_GET_DATA = "Cannot get data user",
+  INVALID_ROLE_ID = "Invalid Role ID",
 
   //Event
   FAILD_CREATE_EVENT = "Faild Create Event",
+  FAILD_UPDATE_EVENT = "Faild Update Event",
   MUST_BE_ORGANIZER = "Must Be Organizer",
 }

@@ -127,11 +127,22 @@ model TicketType {
   quota             Int
   descriptionTicket String?
   benefit           String?
-  event             Event       @relation(fields: [eventId], references: [id])
+  event             Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId           Int
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   orderItem         OrderItem[]
+}
+
+model Voucher {
+  id        Int           @id @default(autoincrement())
+  code      String        @unique
+  discount  Int
+  startDate DateTime
+  endDate   DateTime
+  status    VoucherStatus @default(ACTIVE)
+  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   Int
 }
 
 model OrderItem {
@@ -167,17 +178,6 @@ model Review {
   eventId   Int
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
-}
-
-model Voucher {
-  id        Int           @id @default(autoincrement())
-  code      String        @unique
-  discount  Int
-  startDate DateTime
-  endDate   DateTime
-  status    VoucherStatus @default(ACTIVE)
-  event     Event         @relation(fields: [eventId], references: [id])
-  eventId   Int
 }
 
 model Referral {
