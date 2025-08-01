@@ -1,9 +1,11 @@
 import { prisma } from "../config/prisma";
-import { IEventCreate } from "../dto/eventReq.dto";
+import { IDataEvent } from "../dto/eventReq.dto";
+import { generateVoucherCode } from "../utils/generateCodeVoucher";
 
 class EventRepository {
+  // CREATE EVENT
   public createEventRepo = async (
-    eventCreate: IEventCreate,
+    eventCreate: IDataEvent,
     organizerId: number
   ) => {
     const {
@@ -18,6 +20,19 @@ class EventRepository {
       ticketTypes,
       vouchers,
     } = eventCreate;
+
+    // Generate voucher code jika ada
+    const preparedVouchers = vouchers
+      ? await Promise.all(
+          vouchers.map(async (voucher) => ({
+            code: await generateVoucherCode(),
+            discount: voucher.discount,
+            startDate: voucher.startDate,
+            endDate: voucher.endDate,
+            status: voucher.status,
+          }))
+        )
+      : undefined;
 
     return await prisma.event.create({
       data: {
@@ -41,15 +56,9 @@ class EventRepository {
               })),
             }
           : undefined,
-        vouchers: vouchers
+        vouchers: preparedVouchers
           ? {
-              create: vouchers.map((voucher) => ({
-                code: voucher.code,
-                discount: voucher.discount,
-                startDate: voucher.startDate,
-                endDate: voucher.endDate,
-                status: voucher.status,
-              })),
+              create: preparedVouchers,
             }
           : undefined,
       },
@@ -59,12 +68,95 @@ class EventRepository {
       },
     });
   };
+
+  // UPDATE EVENT
+  public updateEventRepo = async (eventId: number, eventCreate: IDataEvent) => {
+    const {
+      name,
+      description,
+      syaratKetentuan,
+      startDate,
+      endDate,
+      location,
+      category,
+      eventStatus,
+      ticketTypes,
+      vouchers,
+    } = eventCreate;
+
+    // Hapus relasi lama
+    await prisma.ticketType.deleteMany({ where: { eventId } });
+    await prisma.voucher.deleteMany({ where: { eventId } });
+
+    // Generate kode voucher baru
+    const preparedVouchers = vouchers
+      ? await Promise.all(
+          vouchers.map(async (voucher) => ({
+            code: await generateVoucherCode(),
+            discount: voucher.discount,
+            startDate: voucher.startDate,
+            endDate: voucher.endDate,
+            status: voucher.status,
+          }))
+        )
+      : undefined;
+
+    return await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        name,
+        description,
+        syaratKetentuan,
+        startDate,
+        endDate,
+        location,
+        category,
+        eventStatus,
+        ticketTypes: ticketTypes
+          ? {
+              create: ticketTypes.map((ticket) => ({
+                name: ticket.name,
+                price: ticket.price,
+                quota: ticket.quota,
+                descriptionTicket: ticket.descriptionTicket,
+                benefit: ticket.benefit,
+              })),
+            }
+          : undefined,
+        vouchers: preparedVouchers
+          ? {
+              create: preparedVouchers,
+            }
+          : undefined,
+      },
+      include: {
+        ticketTypes: true,
+        vouchers: true,
+      },
+    });
+  };
+
+  // UPLOAD BANNER
   public uploadBanner = async (eventId: number, banner: string) => {
     return await prisma.event.update({
+      where: { id: eventId },
+      data: { banner },
+    });
+  };
+
+  // CEK KEPEMILIKAN EVENT
+  public isOwnerEvent = async (organizerId: number, eventId: number) => {
+    return await prisma.event.findFirst({
       where: {
         id: eventId,
+        organizerId,
       },
-      data: { banner },
+    });
+  };
+
+  public deleteEvent = async (eventId: number) => {
+    return await prisma.event.delete({
+      where: { id: eventId },
     });
   };
 }

@@ -10,7 +10,7 @@ interface IObjectToken {
 }
 export const generateToken = (
   objectToken: IObjectToken,
-  expiresIn: TimeUnit = "1h"
+  expiresIn: TimeUnit = "1d"
 ) => {
   if (!process.env.TOKEN_KEY) return null;
 

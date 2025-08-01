@@ -27,11 +27,18 @@ class EventRouter {
       this.eventValidator.createEventValidator,
       this.eventController.createEvent
     );
+    //route upload banner dipakai barengan sama create atau update
     this.route.patch(
       "/banner/:eventId",
       uploadMemory().single("banner"),
       this.eventController.uploadBanner
     );
+    this.route.patch(
+      "/update/:eventId",
+      this.eventValidator.createEventValidator,
+      this.eventController.updateEvent
+    );
+    this.route.delete("/delete/:eventId", this.eventController.deleteEvent);
   };
 
   public getRouter = () => {
