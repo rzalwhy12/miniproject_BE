@@ -16,10 +16,14 @@ export const verifyToken = (
     }
 
     const token = authHeader.split(" ")[1];
+    console.log("run");
+    console.log(token);
 
     if (!token) {
       throw new AppError(ErrorMsg.TOKEN_NOT_FOUND, StatusCode.UNAUTHORIZED);
     }
+    console.log("run");
+    console.log(token);
     if (!process.env.TOKEN_KEY) {
       throw new AppError(
         ErrorMsg.SERVER_MISSING_SECRET_KEY,

@@ -1,19 +1,20 @@
 import { Router } from "express";
 import { verifyToken } from "../middleware/verifyToken";
 import { uploadMemory } from "../middleware/uploader";
-import EventConttroller from "../controllers/event.controller";
 import EventValidator from "../middleware/validations/event.validator";
+import EventConttroller from "../controllers/event.controller";
 
 class EventRouter {
-  private route: Router;
+    private route: Router;
 
-  //start kontroler deklarasi
-  private eventController = new EventConttroller();
-  //end controller deklarasi
+    //start kontroler deklarasi
+    private eventController = new EventConttroller();
+    //end controller deklarasi
 
-  //start middleware deklarasi
-  private eventValidator = new EventValidator();
-  //end middleware deklarasi
+    //start middleware deklarasi
+    private eventValidator = new EventValidator();
+    //end middleware deklarasi
+
 
   constructor() {
     //inisialisasi
@@ -41,9 +42,11 @@ class EventRouter {
     this.route.delete("/delete/:eventId", this.eventController.deleteEvent);
   };
 
-  public getRouter = () => {
-    return this.route;
-  };
+
+
+    public getRouter = () => {
+        return this.route;
+    };
 }
 
 export default EventRouter;
