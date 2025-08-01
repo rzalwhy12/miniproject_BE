@@ -11,6 +11,7 @@ import { Prisma } from "../prisma/generated/client";
 import { TokenExpiredError } from "jsonwebtoken";
 import AccountRouter from "./routers/account.router";
 import EventRouter from "./routers/event.router";
+import TransactionRouter from "./routers/transaction.router";
 
 const PORT: string = process.env.PORT || "8181";
 
@@ -43,6 +44,7 @@ class App {
     //end
     //risal define path rule start
     this.app.use("/event", eventRouter.getRouter());
+    this.app.use("/transaction", new TransactionRouter().getRouter());
     //end
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
