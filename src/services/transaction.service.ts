@@ -5,6 +5,7 @@ import { StatusCode } from "../constants/statusCode.enum";
 import { TransactionStatus } from "../../prisma/generated/client";
 import { sendEmail } from "../utils/sendEmail";
 import { sendTicketTemplate } from "../template/sendTicket.template";
+import { prisma } from "../config/prisma";
 
 class TransactionService {
   private transactionRepository = new TransactionRepository();
@@ -50,13 +51,45 @@ class TransactionService {
       const findCoupon = await this.transactionRepository.findCoupon(
         customerId
       );
-      coupon = findCoupon?.coupon?.discount;
+
+      if (!findCoupon?.coupon?.id) {
+        throw new AppError("Cannot find your coupon", StatusCode.BAD_REQUEST);
+      }
+
+      if (findCoupon.coupon.expiresAt < new Date()) {
+        throw new AppError("Coupon has expired", StatusCode.BAD_REQUEST);
+      }
+
+      if (findCoupon.coupon.usedTemporarily || findCoupon.coupon.isUsed) {
+        throw new AppError(
+          "Coupon is already used or in process",
+          StatusCode.BAD_REQUEST
+        );
+      }
+
+      const updateTemp = await this.transactionRepository.updateCoupenTempt(
+        findCoupon.coupon.id
+      );
+
+      coupon = updateTemp.discount;
     }
 
     let point: number = 0;
     if (usePoint) {
-      const findPoint = await this.transactionRepository.findPoint(customerId);
-      point = findPoint.reduce((total, item) => total + item.amount, 0);
+      const availablePoints = await this.transactionRepository.findPoint(
+        customerId
+      );
+
+      if (!availablePoints.length) {
+        throw new AppError(
+          "Tidak ada poin yang tersedia",
+          StatusCode.BAD_REQUEST
+        );
+      }
+
+      await this.transactionRepository.updatePointTempt(customerId);
+
+      point = availablePoints.reduce((total, item) => total + item.amount, 0);
     }
 
     let finalPrice = totalPrice;
@@ -85,6 +118,8 @@ class TransactionService {
     const transaction = await this.transactionRepository.createTransaction(
       customerId,
       data,
+      useCoupon,
+      usePoint,
       ticketPrice,
       finalPrice
     );
@@ -147,36 +182,61 @@ class TransactionService {
       );
     }
     if (status === TransactionStatus.DONE) {
+      // update status transaksi jadi DONE
       const tx = await this.transactionRepository.updateStatus(
         findTx.id,
         status
       );
 
-      //kurangi kuota tiket sesuai order
+      //kurangi kuota tiket sesuai item yang dibeli
       await this.transactionRepository.updateIfDone(tx.id);
+
+      //jika user pakai kupon, update isUsed & useAt
+      if (tx.useCoupon) {
+        const findCoupon = await this.transactionRepository.findCoupon(
+          tx.customerId
+        );
+        if (!findCoupon?.coupon?.id) {
+          throw new AppError(
+            "Cannot Update Coupon",
+            StatusCode.INTERNAL_SERVER_ERROR
+          );
+        }
+        await this.transactionRepository.doneUseCoupon(findCoupon.coupon.id);
+      }
+
+      // jika user pakai poin, tandai semua point sebagai sudah digunakan
+      if (tx.usePoint) {
+        await this.transactionRepository.doneUsePoint(tx.customerId);
+      }
+
+      //ambil data event & customer untuk email
       const event = await this.transactionRepository.findEventId(
         findTx.eventId
       );
       const user = await this.transactionRepository.findCustomer(tx.customerId);
       if (!user || !event) {
         throw new AppError(
-          "Faild To Send Email",
+          "Failed To Send Email",
           StatusCode.INTERNAL_SERVER_ERROR
         );
       }
+
+      //ambil data order item (nama tiket & jumlah)
       const orderItem = await this.transactionRepository.findOrderItem(tx.id);
       const myOrderItems = orderItem.map((item) => ({
         name: item.ticketType.name,
         quantity: item.quantity,
       }));
 
+      //kirim email tiket ke customer
       await sendEmail(
-        user?.email,
-        `Your Ticket ${event?.name}`,
+        user.email,
+        `Your Ticket ${event.name}`,
         sendTicketTemplate(
           user.name,
-          event?.name,
-          event?.startDate.toLocaleDateString("id-ID"),
+          event.name,
+          event.startDate.toLocaleDateString("id-ID"),
           tx.transactionCode,
           myOrderItems
         )
@@ -190,6 +250,24 @@ class TransactionService {
         findTx.id,
         status
       );
+
+      if (tx.useCoupon) {
+        const findCoupon = await this.transactionRepository.findCoupon(
+          tx.customerId
+        );
+        if (!findCoupon?.coupon?.id) {
+          throw new AppError(
+            "Cannot Update Coupon",
+            StatusCode.INTERNAL_SERVER_ERROR
+          );
+        }
+        await this.transactionRepository.rejectUseCoupon(findCoupon.coupon.id);
+      }
+
+      if (tx.usePoint) {
+        await this.transactionRepository.rejectUsePoint(tx.customerId);
+      }
+
       return tx;
     }
   };

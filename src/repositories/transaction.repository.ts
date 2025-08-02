@@ -14,6 +14,8 @@ class TransactionRepository {
   public createTransaction = async (
     customerId: number,
     data: ITransactionCreate,
+    useCoupon: boolean,
+    usePoint: boolean,
     orderItems: {
       ticketTypeId: number;
       quantity: number;
@@ -29,6 +31,8 @@ class TransactionRepository {
         eventId: data.eventId,
         transactionCode: await generateTransactionCode(),
         status: TransactionStatus.WAITING_PAYMENT,
+        useCoupon,
+        usePoint,
         totalPrice,
         expiredAt,
         orderItems: {
@@ -74,15 +78,35 @@ class TransactionRepository {
       },
     });
   };
+  public updateCoupenTempt = async (couponId: number) => {
+    return await prisma.coupon.update({
+      where: { id: couponId },
+      data: {
+        usedTemporarily: true,
+      },
+    });
+  };
   public findPoint = async (customerId: number) => {
     return await prisma.point.findMany({
       where: {
-        userId: customerId, // hanya ambil point milik user
-        isUsed: false, // belum dipakai
+        userId: customerId, //hanya ambil point milik user
+        isUsed: false,
         expiresAt: { gt: new Date() }, // belum expired
       },
       orderBy: {
-        expiresAt: "asc", // yang paling dekat expired duluan
+        expiresAt: "asc", //yang paling dekat expired duluan
+      },
+    });
+  };
+  public updatePointTempt = async (customerId: number) => {
+    return await prisma.point.updateMany({
+      where: {
+        userId: customerId,
+        isUsed: false,
+        usedTemporarily: false,
+      },
+      data: {
+        usedTemporarily: true,
       },
     });
   };
@@ -171,6 +195,42 @@ class TransactionRepository {
           },
         },
       },
+    });
+  };
+  public doneUsePoint = async (customerId: number) => {
+    return await prisma.point.updateMany({
+      where: {
+        userId: customerId,
+        usedTemporarily: true,
+      },
+      data: {
+        isUsed: true,
+        usedTemporarily: false,
+        useAt: new Date(),
+      },
+    });
+  };
+  public doneUseCoupon = async (couponId: number) => {
+    return await prisma.coupon.update({
+      where: { id: couponId },
+      data: { isUsed: true, useAt: new Date(), usedTemporarily: false },
+    });
+  };
+  public rejectUsePoint = async (customerId: number) => {
+    return await prisma.point.updateMany({
+      where: {
+        userId: customerId,
+        usedTemporarily: true,
+      },
+      data: {
+        usedTemporarily: false,
+      },
+    });
+  };
+  public rejectUseCoupon = async (couponId: number) => {
+    return await prisma.coupon.update({
+      where: { id: couponId },
+      data: { usedTemporarily: false },
     });
   };
 }
