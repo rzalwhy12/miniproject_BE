@@ -169,6 +169,8 @@ model Transaction {
   status          TransactionStatus
   paymentProof    String?
   totalPrice      Int
+  useCoupon       Boolean           @default(false)
+  usePoint        Boolean           @default(false)
   createdAt       DateTime          @default(now())
   expiredAt       DateTime
   updatedAt       DateTime          @updatedAt
@@ -197,21 +199,24 @@ model Referral {
 }
 
 model Coupon {
-  id         Int       @id @default(autoincrement())
-  discount   Int
-  expiresAt  DateTime
-  isUsed     Boolean   @default(false)
-  useAt      DateTime?
-  referral   Referral  @relation(fields: [referralId], references: [id])
-  referralId Int       @unique
+  id              Int       @id @default(autoincrement())
+  discount        Int
+  expiresAt       DateTime
+  isUsed          Boolean   @default(false)
+  usedTemporarily Boolean   @default(false)
+  useAt           DateTime?
+  referral        Referral  @relation(fields: [referralId], references: [id])
+  referralId      Int       @unique
 }
 
 model Point {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  amount    Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  isUsed    Boolean  @default(false)
+  id              Int       @id @default(autoincrement())
+  user            User      @relation(fields: [userId], references: [id])
+  userId          Int
+  amount          Int
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  isUsed          Boolean   @default(false)
+  usedTemporarily Boolean   @default(false)
+  useAt           DateTime?
 }
