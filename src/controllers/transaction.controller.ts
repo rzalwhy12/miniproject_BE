@@ -1,28 +1,127 @@
 import TransactionService from "../services/transaction.service";
 import { NextFunction, Request, Response } from "express";
-import { IOrderCreateReq } from "../dto/transacionReq.dto";
 import { StatusCode } from "../constants/statusCode.enum";
 import AppError from "../errors/AppError";
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { sendResSuccess } from "../utils/SendResSuccess";
 import { SuccessMsg } from "../constants/successMessage.enum";
+import { RoleName, TransactionStatus } from "../../prisma/generated/client";
+import TransactionRepository from "../repositories/transaction.repository";
+import { cloudinaryUpload } from "../config/cloudinary";
+import { UploadApiResponse } from "cloudinary";
+import { tr } from "@faker-js/faker/.";
 
 class TransactionController {
   private transactionService = new TransactionService();
-
-  public orderItem = async (
+  private transactionRepository = new TransactionRepository();
+  public transaction = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
       const userId = res.locals.decript.id;
+      const userRole = res.locals.decript.activeRole;
+      const eventId = req.body.eventId;
       if (!userId) {
         throw new AppError(ErrorMsg.UNAUTHORIZED, StatusCode.UNAUTHORIZED);
       }
-      const data: IOrderCreateReq = req.body;
-      const result = await this.transactionService.orderItem(userId, data);
+      const event = await this.transactionRepository.findEventId(eventId);
+      if (userId === event?.organizerId) {
+        throw new AppError(
+          "Organizer Cannot Create Transaction",
+          StatusCode.BAD_REQUEST
+        );
+      }
+      if (userRole === RoleName.ORGANIZER) {
+        throw new AppError("Please switch to customer", StatusCode.BAD_REQUEST);
+      }
+      const result = await this.transactionService.createTransaction(
+        userId,
+        req.body
+      );
       sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, result);
+    } catch (error) {
+      next(error);
+    }
+  };
+  public cutomerUploadProof = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const transactionId = parseInt(req.params.transactionId);
+      const customerId = res.locals.decript.id;
+      if (res.locals.decript.activeRole !== RoleName.CUSTOMER) {
+        throw new AppError(ErrorMsg.MUST_BE_CUSTOMER, StatusCode.UNAUTHORIZED);
+      }
+      const alreadyUpload = await this.transactionRepository.findTransaction(
+        transactionId
+      );
+      if (alreadyUpload?.paymentProof) {
+        throw new AppError("Already Upload", StatusCode.BAD_REQUEST);
+      }
+      let upload: UploadApiResponse | undefined;
+      if (req.file) {
+        upload = await cloudinaryUpload(req.file);
+      }
+      if (!upload?.secure_url) {
+        throw new AppError(
+          "Server Cannot Upload File",
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+      const uploadedProof = await this.transactionService.uploadProofPayment(
+        transactionId,
+        upload.secure_url,
+        customerId
+      );
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, uploadedProof);
+    } catch (error) {
+      next(error);
+    }
+  };
+  public organizerResponse = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const transactionId = parseInt(req.params.transactionId);
+      const { status } = req.body;
+      const organizerId = res.locals.decript.id;
+
+      if (res.locals.decript.activeRole !== RoleName.ORGANIZER) {
+        throw new AppError(ErrorMsg.MUST_BE_ORGANIZER, StatusCode.UNAUTHORIZED);
+      }
+
+      if (isNaN(transactionId)) {
+        throw new AppError(
+          "transactionId harus berupa angka",
+          StatusCode.BAD_REQUEST
+        );
+      }
+
+      const allowedStatus = [
+        TransactionStatus.DONE,
+        TransactionStatus.REJECTED,
+      ];
+
+      if (!allowedStatus.includes(status)) {
+        throw new AppError(
+          "Status transaksi tidak valid",
+          StatusCode.BAD_REQUEST
+        );
+      }
+
+      const transaction = await this.transactionService.organizerResponse(
+        status,
+        transactionId,
+        organizerId
+      );
+
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, transaction);
     } catch (error) {
       next(error);
     }

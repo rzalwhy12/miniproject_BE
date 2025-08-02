@@ -44,6 +44,7 @@ class AuthController {
           email: data.user.email,
           isverified: data.user.isVerified,
           activeRole: data.user.roles[0].role.name,
+          rememberMe: remeberMe,
         },
         remeberMe ? "7h" : "1h"
       );
@@ -157,7 +158,7 @@ class AuthController {
       }
 
       const userId = res.locals.decript.id;
-
+      const remeberMe = res.locals.decript.remeberMe;
       // Switch role (ubah active role di DB)
       const newActiveRole = await this.authRepository.switchRoleRepo(
         userId,
@@ -179,12 +180,16 @@ class AuthController {
       }
 
       // Buat token baru dengan role aktif yang baru
-      const token = generateToken({
-        id: user.id,
-        email: user.email,
-        isverified: user.isVerified,
-        activeRole: newActiveRole,
-      });
+      const token = generateToken(
+        {
+          id: user.id,
+          email: user.email,
+          isverified: user.isVerified,
+          activeRole: newActiveRole,
+          rememberMe: remeberMe,
+        },
+        remeberMe ? "7h" : "1h"
+      );
 
       if (!token) {
         throw new AppError(

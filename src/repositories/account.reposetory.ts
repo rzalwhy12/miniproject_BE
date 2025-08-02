@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { IUpdateUser } from "../dto/userReq.dto";
+import { IUpdateUser } from "../dto/req/userReq.dto";
 
 class AccountRepository {
   public getDataUser = async (id: number) => {

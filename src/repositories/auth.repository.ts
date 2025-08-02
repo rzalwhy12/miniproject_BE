@@ -7,7 +7,7 @@ import {
   IFindAccount,
   ISignUpDTO,
   IUpdateUser,
-} from "../dto/userReq.dto";
+} from "../dto/req/userReq.dto";
 import { generateReferralCode } from "../utils/generateReferralCode";
 import { hashPassword } from "../utils/hash";
 

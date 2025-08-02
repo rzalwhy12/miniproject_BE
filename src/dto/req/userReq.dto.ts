@@ -35,8 +35,6 @@ export interface IDataPoint {
 
 export interface IUpdateUser {
   id: number;
-  username?: string;
-  email?: string;
   noTlp?: string;
   birthDate?: string;
   gender?: Gender;

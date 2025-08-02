@@ -34,6 +34,7 @@ class App {
     const authrouter: AuthRouter = new AuthRouter();
     const accountRouter: AccountRouter = new AccountRouter();
     const eventRouter: EventRouter = new EventRouter();
+    const transaction: TransactionRouter = new TransactionRouter();
 
     this.app.get("/", (req: Request, res: Response) => {
       res.status(200).send("<h1>Test Tiket Backend</h1>");
@@ -44,7 +45,7 @@ class App {
     //end
     //risal define path rule start
     this.app.use("/event", eventRouter.getRouter());
-    this.app.use("/transaction", new TransactionRouter().getRouter());
+    this.app.use("/transaction", transaction.getRouter());
     //end
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));

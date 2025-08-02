@@ -65,6 +65,9 @@ model User {
   noTlp             String?
   birthDate         DateTime?
   gender            Gender?
+  bankAccount       String?
+  bankName          String?
+  accountHolder     String?
   roles             UserRole[]
   referralCode      String        @unique
   isVerified        Boolean       @default(false)
@@ -99,6 +102,7 @@ model UserRole {
 model Event {
   id              Int           @id @default(autoincrement())
   name            String
+  slug            String        @unique
   banner          String?
   description     String?
   syaratKetentuan String?
@@ -156,17 +160,19 @@ model OrderItem {
 }
 
 model Transaction {
-  id           Int               @id @default(autoincrement())
-  user         User              @relation(fields: [customerId], references: [id])
-  customerId   Int
-  event        Event             @relation(fields: [eventId], references: [id])
-  eventId      Int
-  status       TransactionStatus
-  paymentProof String?
-  createdAt    DateTime          @default(now())
-  expiredAt    DateTime?
-  updatedAt    DateTime          @updatedAt
-  orderItems   OrderItem[]
+  id              Int               @id @default(autoincrement())
+  user            User              @relation(fields: [customerId], references: [id])
+  transactionCode String            @unique
+  customerId      Int
+  event           Event             @relation(fields: [eventId], references: [id])
+  eventId         Int
+  status          TransactionStatus
+  paymentProof    String?
+  totalPrice      Int
+  createdAt       DateTime          @default(now())
+  expiredAt       DateTime
+  updatedAt       DateTime          @updatedAt
+  orderItems      OrderItem[]
 }
 
 model Review {
@@ -186,7 +192,7 @@ model Referral {
   referrer   User     @relation("Referrer", fields: [referrerId], references: [id])
   referrerId Int
   referred   User     @relation("Referred", fields: [referredId], references: [id])
-  referredId Int      @unique
+  referredId Int      @unique //yang menerima 
   coupon     Coupon?
 }
 

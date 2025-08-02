@@ -1,7 +1,7 @@
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { StatusCode } from "../constants/statusCode.enum";
 import { SuccessMsg } from "../constants/successMessage.enum";
-import { IUpdateUser } from "../dto/userReq.dto";
+import { IUpdateUser } from "../dto/req/userReq.dto";
 import AppError from "../errors/AppError";
 import AccountRepository from "../repositories/account.reposetory";
 

@@ -2,7 +2,7 @@ import {
   EventCategory,
   EventStatus,
   VoucherStatus,
-} from "../../prisma/generated/client";
+} from "../../../prisma/generated/client";
 
 export interface IDataTicketType {
   name: string;

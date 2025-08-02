@@ -1,6 +1,6 @@
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { StatusCode } from "../constants/statusCode.enum";
-import { IDataEvent } from "../dto/eventReq.dto";
+import { IDataEvent } from "../dto/req/eventReq.dto";
 import AppError from "../errors/AppError";
 import eventRepository from "../repositories/event.repository";
 

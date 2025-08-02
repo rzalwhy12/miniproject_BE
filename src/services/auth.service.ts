@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { IFindAccount, ISignUpDTO } from "../dto/userReq.dto";
+import { IFindAccount, ISignUpDTO } from "../dto/req/userReq.dto";
 import AuthRepository from "../repositories/auth.repository";
 import AppError from "../errors/AppError";
 import { ErrorMsg } from "../constants/errorMessage.enum";
@@ -59,6 +59,7 @@ class AuthServices {
       email: newUser.email,
       isverified: newUser.isVerified,
       activeRole: RoleName.CUSTOMER,
+      rememberMe: false,
     });
     if (!token) {
       throw new AppError(
@@ -119,6 +120,7 @@ class AuthServices {
       email: user.email,
       isverified: user.isVerified,
       activeRole: user.roles[0].role.name,
+      rememberMe: false,
     });
     const urlFE: string = `${process.env.BASIC_URL_FE}/verify/${token}`;
     const subject: string = "Reset Your Password";

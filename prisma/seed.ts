@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker";
+import slugify from "slugify";
 import {
   EventCategory,
   EventStatus,
@@ -6,16 +6,16 @@ import {
   PrismaClient,
   RoleName,
   TransactionStatus,
-  VoucherStatus,
 } from "./generated/client";
 import { hashPassword } from "../src/utils/hash";
+import { generateTransactionCode } from "../src/utils/transactionCode";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.point.deleteMany();
   await prisma.coupon.deleteMany();
   await prisma.referral.deleteMany();
-  await prisma.point.deleteMany();
   await prisma.review.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.transaction.deleteMany();
@@ -26,160 +26,141 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.role.deleteMany();
 
-  // Seed Role with fixed ID
-  const customerRole = await prisma.role.create({
-    data: { id: 1, name: RoleName.CUSTOMER },
-  });
-  const organizerRole = await prisma.role.create({
-    data: { id: 2, name: RoleName.ORGANIZER },
+  await prisma.role.createMany({
+    data: [
+      { id: 1, name: RoleName.CUSTOMER },
+      { id: 2, name: RoleName.ORGANIZER },
+    ],
   });
 
-  const users: any[] = [];
+  const baseDate = new Date();
 
-  for (let i = 1; i <= 20; i++) {
-    const gender = faker.helpers.arrayElement([Gender.MALE, Gender.FEMALE]);
+  // 🔹 Buat 1 user referrer utama
+  const referrerUser = await prisma.user.create({
+    data: {
+      username: "referrer1",
+      email: "referrer1@example.com",
+      password: await hashPassword("1234"),
+      name: "Referrer User",
+      referralCode: "REFMAIN",
+      gender: Gender.MALE,
+      roles: {
+        createMany: {
+          data: [
+            { roleId: 1, isActive: true },
+            { roleId: 2, isActive: false },
+          ],
+        },
+      },
+    },
+  });
+
+  for (let i = 1; i <= 10; i++) {
+    const gender = i % 2 === 0 ? Gender.FEMALE : Gender.MALE;
+    const referred = i % 3 === 0; // user 3, 6, 9 akan pakai referral
+
+    const referralCode = `REFCODE${i}`;
+
     const user = await prisma.user.create({
       data: {
-        username: faker.internet.username(),
-        email: faker.internet.email(),
-        password: await hashPassword("password"),
-        name: faker.person.fullName(),
-        noTlp: faker.phone.number(),
-        birthDate: faker.date.birthdate({ mode: "age", min: 18, max: 45 }),
+        username: `user${i}`,
+        email: `user${i}@example.com`,
+        password: await hashPassword("1234"),
+        name: `User ${i}`,
+        referralCode,
         gender,
-        referralCode: `REF${i.toString().padStart(4, "0")}`,
-        isVerified: true,
-        profileImage: faker.image.avatar(),
-      },
-    });
-
-    users.push(user);
-
-    await prisma.userRole.createMany({
-      data: [
-        { userId: user.id, roleId: customerRole.id, isActive: true },
-        { userId: user.id, roleId: organizerRole.id, isActive: false },
-      ],
-    });
-
-    const startDate = faker.date.soon({ days: 30 });
-    const endDate = faker.date.soon({ days: 3, refDate: startDate });
-
-    const event = await prisma.event.create({
-      data: {
-        name: faker.company.name(),
-        banner: faker.image.url(),
-        description: faker.lorem.paragraph(),
-        syaratKetentuan: faker.lorem.sentence(),
-        startDate,
-        endDate,
-        location: faker.location.city(),
-        organizerId: user.id,
-        category: faker.helpers.arrayElement(Object.values(EventCategory)),
-        eventStatus: faker.helpers.arrayElement(Object.values(EventStatus)),
-      },
-    });
-
-    const ticket1 = await prisma.ticketType.create({
-      data: {
-        name: "Reguler",
-        price: 50000,
-        quota: 100,
-        descriptionTicket: "Tiket reguler",
-        benefit: "Akses umum",
-        eventId: event.id,
-      },
-    });
-
-    const ticket2 = await prisma.ticketType.create({
-      data: {
-        name: "VIP",
-        price: 100000,
-        quota: 50,
-        descriptionTicket: "Tiket VIP",
-        benefit: "Akses VIP + makanan",
-        eventId: event.id,
-      },
-    });
-
-    await prisma.voucher.create({
-      data: {
-        code: `VOUCH${i.toString().padStart(3, "0")}`,
-        discount: 10,
-        status: VoucherStatus.ACTIVE,
-        startDate,
-        endDate,
-        eventId: event.id,
-      },
-    });
-
-    const transaction = await prisma.transaction.create({
-      data: {
-        customerId: user.id,
-        eventId: event.id,
-        status: TransactionStatus.DONE,
-        paymentProof: faker.image.url(),
-        expiredAt: faker.date.future(),
-        orderItems: {
-          create: [
-            {
-              ticketTypeId: ticket1.id,
-              quantity: 1,
-              subTotal: ticket1.price,
-            },
-          ],
+        roles: {
+          createMany: {
+            data: [
+              { roleId: 1, isActive: true },
+              { roleId: 2, isActive: false },
+            ],
+          },
         },
       },
     });
 
-    await prisma.review.create({
+    // 🔹 Jika user ini didaftarkan dengan referral:
+    if (referred) {
+      // Buat referral & kupon
+      await prisma.referral.create({
+        data: {
+          referrerId: referrerUser.id,
+          referredId: user.id,
+          coupon: {
+            create: {
+              discount: 10,
+              expiresAt: new Date(baseDate.getTime() + 90 * 86400000),
+            },
+          },
+        },
+      });
+
+      // Tambahkan poin ke referrer
+      await prisma.point.create({
+        data: {
+          userId: referrerUser.id,
+          amount: 10000,
+          expiresAt: new Date(baseDate.getTime() + 90 * 86400000),
+        },
+      });
+    }
+
+    // Event & tiket oleh user ini (biar semua user juga jadi organizer)
+    const event = await prisma.event.create({
       data: {
-        rating: faker.number.int({ min: 3, max: 5 }),
-        comment: faker.lorem.sentence(),
+        name: `Event ${i}`,
+        slug: slugify(`Event ${i}-${Date.now()}`, { lower: true }),
+        location: `Lokasi ${i}`,
+        startDate: new Date(baseDate.getTime() + i * 86400000),
+        endDate: new Date(baseDate.getTime() + (i + 1) * 86400000),
+        organizerId: user.id,
+        category:
+          Object.values(EventCategory)[i % Object.values(EventCategory).length],
+        eventStatus:
+          Object.values(EventStatus)[i % Object.values(EventStatus).length],
+        vouchers: {
+          create: {
+            code: `EVENTVOUCHER${i}`,
+            discount: 15,
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 30 * 86400000),
+          },
+        },
+      },
+    });
+    const ticket = await prisma.ticketType.create({
+      data: {
+        name: `Ticket ${i}`,
+        price: 50000 + i * 10000,
+        quota: 100,
         eventId: event.id,
-        userId: user.id,
       },
     });
 
-    await prisma.point.create({
-      data: {
-        userId: user.id,
-        amount: faker.number.int({ min: 5000, max: 20000 }),
-        expiresAt: faker.date.future(),
-      },
-    });
+    // Optional: buat transaksi untuk user yang pakai referral
+    if (referred) {
+      await prisma.transaction.create({
+        data: {
+          customerId: user.id,
+          eventId: event.id,
+          transactionCode: await generateTransactionCode(),
+          status: TransactionStatus.WAITING_PAYMENT,
+          totalPrice: ticket.price * 2,
+          expiredAt: new Date(baseDate.getTime() + 2 * 86400000),
+          orderItems: {
+            create: {
+              ticketTypeId: ticket.id,
+              quantity: 2,
+              subTotal: ticket.price * 2,
+            },
+          },
+        },
+      });
+    }
   }
 
-  // Referral System
-  for (let i = 0; i < 10; i++) {
-    const referrer = users[i];
-    const referred = users[19 - i];
-
-    const referral = await prisma.referral.create({
-      data: {
-        referrerId: referrer.id,
-        referredId: referred.id,
-      },
-    });
-
-    await prisma.coupon.create({
-      data: {
-        discount: 10,
-        expiresAt: faker.date.future(),
-        referralId: referral.id,
-      },
-    });
-
-    await prisma.point.create({
-      data: {
-        userId: referrer.id,
-        amount: 10000,
-        expiresAt: faker.date.future(),
-      },
-    });
-  }
-
-  console.log("✅ Seed selesai.");
+  console.log("✅ Seeding selesai: user, event, referral, poin, dan kupon");
 }
 
 main()
@@ -187,4 +168,6 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
