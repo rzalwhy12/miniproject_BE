@@ -1,9 +1,10 @@
 import { prisma } from "../config/prisma";
-import { IDataEvent } from "../dto/eventReq.dto";
+import { IDataEvent } from "../dto/req/eventReq.dto";
 import { generateVoucherCode } from "../utils/generateCodeVoucher";
+import { generateSlug } from "../utils/slugFly";
 
 class EventRepository {
-  // CREATE EVENT
+  //create event
   public createEventRepo = async (
     eventCreate: IDataEvent,
     organizerId: number
@@ -37,6 +38,7 @@ class EventRepository {
     return await prisma.event.create({
       data: {
         name,
+        slug: generateSlug(name),
         description,
         syaratKetentuan,
         startDate,
@@ -69,7 +71,7 @@ class EventRepository {
     });
   };
 
-  // UPDATE EVENT
+  //update event
   public updateEventRepo = async (eventId: number, eventCreate: IDataEvent) => {
     const {
       name,
@@ -136,7 +138,7 @@ class EventRepository {
     });
   };
 
-  // UPLOAD BANNER
+  //upload event
   public uploadBanner = async (eventId: number, banner: string) => {
     return await prisma.event.update({
       where: { id: eventId },
@@ -144,7 +146,7 @@ class EventRepository {
     });
   };
 
-  // CEK KEPEMILIKAN EVENT
+  //cek ownerevent
   public isOwnerEvent = async (organizerId: number, eventId: number) => {
     return await prisma.event.findFirst({
       where: {

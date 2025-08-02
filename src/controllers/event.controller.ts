@@ -77,7 +77,9 @@ class EventConttroller {
       if (event) {
         sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
       }
-    } catch (error) {}
+    } catch (error) {
+      next(error);
+    }
   };
   public updateEvent = async (
     req: Request,

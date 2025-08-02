@@ -1,34 +1,176 @@
+import { tr } from "@faker-js/faker/.";
+import { EventStatus, TransactionStatus } from "../../prisma/generated/client";
 import { prisma } from "../config/prisma";
-import { IOrderCreateReq } from "../dto/transacionReq.dto";
+import { ITransactionCreate } from "../dto/req/transacionReq.dto";
+import { after } from "node:test";
+import { generateTransactionCode } from "../utils/transactionCode";
+
+export interface IOrderItemInput {
+  ticketTypeId: number;
+  quantity: number;
+}
 
 class TransactionRepository {
   public createTransaction = async (
     customerId: number,
-    data: IOrderCreateReq
+    data: ITransactionCreate,
+    orderItems: {
+      ticketTypeId: number;
+      quantity: number;
+      subTotal: number;
+    }[],
+    totalPrice: number
   ) => {
+    const now = new Date();
+    const expiredAt = new Date(now.getTime() + 2 * 60 * 60 * 1000); //waiting payment 2 jam
     return await prisma.transaction.create({
       data: {
         customerId,
         eventId: data.eventId,
-        status: "WAITING_PAYMENT",
+        transactionCode: await generateTransactionCode(),
+        status: TransactionStatus.WAITING_PAYMENT,
+        totalPrice,
+        expiredAt,
         orderItems: {
-          create: data.orderItems.map((item) => ({
-            ticketTypeId: item.ticketTypeId,
-            quantity: item.quantity,
-            subTotal: 0, // Akan diisi di service
-          })),
+          create: orderItems,
         },
       },
       include: {
-        orderItems: true,
+        user: true,
+        event: true,
+        orderItems: {
+          include: {
+            ticketType: true,
+          },
+        },
       },
     });
   };
+  public getTicketPrice = async (data: ITransactionCreate) => {
+    return await Promise.all(
+      data.orderItems.map(async (item) => {
+        const ticket = await prisma.ticketType.findUnique({
+          where: { id: item.ticketTypeId },
+          select: { price: true },
+        });
 
-  public getTransactionById = async (id: number) => {
+        const price = ticket?.price || 0;
+
+        return {
+          ticketTypeId: item.ticketTypeId,
+          quantity: item.quantity,
+          subTotal: item.quantity * price,
+        };
+      })
+    );
+  };
+  public findCoupon = async (customerId: number) => {
+    return await prisma.referral.findFirst({
+      where: {
+        referredId: customerId,
+      },
+      include: {
+        coupon: true,
+      },
+    });
+  };
+  public findPoint = async (customerId: number) => {
+    return await prisma.point.findMany({
+      where: {
+        userId: customerId, // hanya ambil point milik user
+        isUsed: false, // belum dipakai
+        expiresAt: { gt: new Date() }, // belum expired
+      },
+      orderBy: {
+        expiresAt: "asc", // yang paling dekat expired duluan
+      },
+    });
+  };
+  public findEventId = async (eventId: number) => {
+    return await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+  };
+  public validVoucher = async (voucerCode: string) => {
+    return await prisma.voucher.findUnique({
+      where: { code: voucerCode },
+    });
+  };
+  public isPublished = async (eventId: number) => {
+    return prisma.event.findUnique({
+      where: {
+        id: eventId,
+        eventStatus: EventStatus.PUBLISHED,
+      },
+    });
+  };
+  public uploadPaymentProof = async (
+    transactionId: number,
+    proofImage: string
+  ) => {
+    return await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        paymentProof: proofImage,
+        status: TransactionStatus.WAITING_CONFIRMATION,
+      },
+    });
+  };
+  public findTransaction = async (transactionId: number) => {
     return await prisma.transaction.findUnique({
-      where: { id },
-      include: { orderItems: true },
+      where: { id: transactionId },
+    });
+  };
+  public updateStatus = async (
+    transactionId: number,
+    status: TransactionStatus
+  ) => {
+    return prisma.transaction.update({
+      where: {
+        id: transactionId,
+      },
+      data: { status },
+    });
+  };
+  public updateIfDone = async (transactionId: number) => {
+    const orderItems = await prisma.orderItem.findMany({
+      where: { transactionId },
+      select: {
+        ticketTypeId: true,
+        quantity: true,
+      },
+    });
+
+    const ops = orderItems.map((item) =>
+      prisma.ticketType.update({
+        where: { id: item.ticketTypeId },
+        data: {
+          quota: {
+            decrement: item.quantity,
+          },
+        },
+      })
+    );
+
+    return await prisma.$transaction(ops);
+  };
+  public findCustomer = async (custormerId: number) => {
+    return await prisma.user.findUnique({
+      where: { id: custormerId },
+    });
+  };
+  public findOrderItem = async (transactionId: number) => {
+    return await prisma.orderItem.findMany({
+      where: { transactionId },
+      select: {
+        quantity: true,
+        ticketType: {
+          select: {
+            name: true,
+            price: true,
+          },
+        },
+      },
     });
   };
 }

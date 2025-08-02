@@ -23,4 +23,7 @@ export enum ErrorMsg {
   FAILD_CREATE_EVENT = "Faild Create Event",
   FAILD_UPDATE_EVENT = "Faild Update Event",
   MUST_BE_ORGANIZER = "Must Be Organizer",
+
+  //Transaction
+  MUST_BE_CUSTOMER = "Must Be Customer",
 }
