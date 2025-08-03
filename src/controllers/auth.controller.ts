@@ -46,7 +46,7 @@ class AuthController {
           activeRole: data.user.roles[0].role.name,
           rememberMe: remeberMe,
         },
-        remeberMe ? "7h" : "1h"
+        remeberMe ? "7d" : "1h"
       );
 
       if (!token) {
@@ -55,13 +55,15 @@ class AuthController {
           StatusCode.INTERNAL_SERVER_ERROR
         );
       }
-      console.log(data.user, token, req.body);
+      console.log("start");
+      console.log(data.user);
+      console.log("end");
 
       sendResSuccess(
         res,
         SuccessMsg.USER_LOGGED_IN,
         StatusCode.OK,
-        mapUserToDTO(data.user),
+        { name: data.user.name, role: data.user.roles[0].role.name },
         token
       );
     } catch (error) {
@@ -89,18 +91,23 @@ class AuthController {
   ) => {
     try {
       const data = await this.authService.keepLogin(res.locals.decript.id);
+
       if (!data) {
         throw new AppError(
           ErrorMsg.INTERNAL_SERVER_ERROR,
           StatusCode.INTERNAL_SERVER_ERROR
         );
       }
-      sendResSuccess(
-        res,
-        SuccessMsg.USER_LOGGED_IN,
-        StatusCode.OK,
-        mapUserToDTO(data)
-      );
+
+      const activeRole = data.roles.find((r) => r.isActive);
+      if (!activeRole) {
+        throw new AppError("Active role not found", StatusCode.NOT_FOUND);
+      }
+
+      sendResSuccess(res, SuccessMsg.USER_LOGGED_IN, StatusCode.OK, {
+        name: data.name,
+        role: activeRole.role.name,
+      });
     } catch (error) {
       next(error);
     }
@@ -118,7 +125,7 @@ class AuthController {
           StatusCode.INTERNAL_SERVER_ERROR
         );
       }
-      sendResSuccess(res, SuccessMsg.OK, StatusCode.UNAUTHORIZED);
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
     } catch (error) {
       next(error);
     }
@@ -178,27 +185,30 @@ class AuthController {
       if (!user || !user.roles || user.roles.length === 0) {
         throw new AppError("User or role not found", StatusCode.NOT_FOUND);
       }
+      const activeRole = user.roles.find((r) => r.isActive);
 
-      // Buat token baru dengan role aktif yang baru
+      if (!activeRole) {
+        throw new AppError("Active role not found", StatusCode.NOT_FOUND);
+      }
+
       const token = generateToken(
         {
           id: user.id,
           email: user.email,
           isverified: user.isVerified,
-          activeRole: newActiveRole,
+          activeRole: activeRole.role.name,
           rememberMe: remeberMe,
         },
         remeberMe ? "7h" : "1h"
       );
 
-      if (!token) {
-        throw new AppError(
-          "Server Cannot Generate Token",
-          StatusCode.INTERNAL_SERVER_ERROR
-        );
-      }
-
-      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, newActiveRole, token);
+      sendResSuccess(
+        res,
+        SuccessMsg.OK,
+        StatusCode.OK,
+        { name: user.name, role: activeRole.role.name },
+        token
+      );
     } catch (error) {
       next(error);
     }

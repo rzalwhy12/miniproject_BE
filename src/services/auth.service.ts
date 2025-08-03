@@ -78,7 +78,6 @@ class AuthServices {
     const isExist = await this.authRepository.findAccount(field);
     return isExist;
   };
-
   public loginUser = async (dataLogin: IFindAccount, passwordBody: string) => {
     const user = await this.authRepository.findAccount(dataLogin);
     if (!user) {
@@ -90,7 +89,6 @@ class AuthServices {
     const comparePassword = await compare(passwordBody, user.password);
     return { user, comparePassword };
   };
-
   public verifyUser = async (id: number) => {
     const isVerify = !!(await prisma.user.update({
       where: {
@@ -122,7 +120,7 @@ class AuthServices {
       activeRole: user.roles[0].role.name,
       rememberMe: false,
     });
-    const urlFE: string = `${process.env.BASIC_URL_FE}/verify/${token}`;
+    const urlFE: string = `${process.env.BASIC_URL_FE}/reset-password/${token}`;
     const subject: string = "Reset Your Password";
     sendEmail(user.email, subject, resetPasswordTemplate(user.name, urlFE));
     return user;
