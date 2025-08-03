@@ -55,37 +55,31 @@ class EventValidator {
       .withMessage("Invalid event status"),
 
     // Ticket Types (Array)
+
     body("ticketTypes")
-      .optional()
-      .isArray()
-      .withMessage("Ticket types must be an array"),
+      .isArray({ min: 1 })
+      .withMessage("Ticket types must be a non-empty array"),
 
     body("ticketTypes.*.name")
-      .optional()
       .notEmpty()
       .withMessage("Ticket name is required"),
 
     body("ticketTypes.*.price")
-      .optional()
       .isInt({ min: 0 })
       .withMessage("Ticket price must be a positive number"),
 
     body("ticketTypes.*.quota")
-      .optional()
       .isInt({ min: 1 })
       .withMessage("Quota must be at least 1"),
 
     body("ticketTypes.*.descriptionTicket")
-      .optional()
       .isString()
       .withMessage("Ticket description must be a string"),
 
     body("ticketTypes.*.benefit")
-      .optional()
       .isString()
       .withMessage("Ticket benefit must be a string"),
 
-    // ✅ Voucher (Array optional)
     body("vouchers")
       .optional()
       .isArray()

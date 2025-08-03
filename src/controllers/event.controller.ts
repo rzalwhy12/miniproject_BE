@@ -9,6 +9,7 @@ import { ErrorMsg } from "../constants/errorMessage.enum";
 import { UploadApiResponse } from "cloudinary";
 import { cloudinaryUpload } from "../config/cloudinary";
 import EventRepository from "../repositories/event.repository";
+import { mapEventToRes } from "../mappers/event.mapper";
 
 class EventConttroller {
   private eventService = new EventService();
@@ -38,7 +39,7 @@ class EventConttroller {
       }
 
       if (event) {
-        sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
+        sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, mapEventToRes(event));
       }
     } catch (error) {
       next(error);

@@ -1,5 +1,7 @@
-import { Transaction } from "../../prisma/generated/client";
+import { Event } from "../../prisma/generated/client";
 
-const mapTransactionToRes = (transaction: Transaction) => {
-  return {};
+export const mapEventToRes = (event: Event) => {
+  return {
+    id: event.id,
+  };
 };
