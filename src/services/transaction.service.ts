@@ -126,8 +126,7 @@ class TransactionService {
 
     return transaction;
   };
-
-  //status jadi waitinn confirm
+  //status jadi waiting confirm
   public uploadProofPayment = async (
     transactionId: number,
     proofImage: string,
@@ -158,6 +157,7 @@ class TransactionService {
     );
     return uploadedProof;
   };
+  //reject atau done
   public organizerResponse = async (
     status: string,
     transactionId: number,
@@ -270,6 +270,13 @@ class TransactionService {
 
       return tx;
     }
+  };
+  public getListOrder = async (organizerId: number) => {
+    const trasnsaction =
+      await this.transactionRepository.showActiveOrderListByOrganizer(
+        organizerId
+      );
+    return trasnsaction;
   };
 }
 
