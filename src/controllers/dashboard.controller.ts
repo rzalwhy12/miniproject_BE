@@ -1,3 +1,0 @@
-class DashboardController {
-  public listEvent = () => {};
-}

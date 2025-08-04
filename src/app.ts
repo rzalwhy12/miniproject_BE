@@ -39,14 +39,13 @@ class App {
     this.app.get("/", (req: Request, res: Response) => {
       res.status(200).send("<h1>Test Tiket Backend</h1>");
     });
-    //fendry define path rule start
+
     this.app.use("/auth", authrouter.getRouter()); //jangan lupa tanda kurung buat jalanin methodnya
     this.app.use("/account", accountRouter.getRouter());
-    //end
-    //risal define path rule start
+
     this.app.use("/event", eventRouter.getRouter());
     this.app.use("/transaction", transaction.getRouter());
-    //end
+
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));
     });

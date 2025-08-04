@@ -233,6 +233,44 @@ class TransactionRepository {
       data: { usedTemporarily: false },
     });
   };
+  public showActiveOrderListByOrganizer = async (organizerId: number) => {
+    return await prisma.transaction.findMany({
+      where: {
+        status: "WAITING_CONFIRMATION",
+        event: {
+          organizerId,
+          endDate: {
+            gt: new Date(),
+          },
+        },
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            name: true,
+            startDate: true,
+            endDate: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        orderItems: {
+          include: {
+            ticketType: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  };
 }
 
 export default TransactionRepository;

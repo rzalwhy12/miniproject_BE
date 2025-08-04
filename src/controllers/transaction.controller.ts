@@ -9,7 +9,6 @@ import { RoleName, TransactionStatus } from "../../prisma/generated/client";
 import TransactionRepository from "../repositories/transaction.repository";
 import { cloudinaryUpload } from "../config/cloudinary";
 import { UploadApiResponse } from "cloudinary";
-import { tr } from "@faker-js/faker/.";
 
 class TransactionController {
   private transactionService = new TransactionService();
@@ -121,6 +120,22 @@ class TransactionController {
         organizerId
       );
 
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, transaction);
+    } catch (error) {
+      next(error);
+    }
+  };
+  public getTransactionOrder = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const organizerId = res.locals.decript.id;
+
+      const transaction = await this.transactionService.getListOrder(
+        organizerId
+      );
       sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, transaction);
     } catch (error) {
       next(error);
