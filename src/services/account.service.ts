@@ -38,7 +38,7 @@ class AccountService {
         StatusCode.INTERNAL_SERVER_ERROR
       );
     }
-    const comparePass = await compare(user.password, oldPassword);
+    const comparePass = await compare(oldPassword, user.password);
 
     if (!comparePass) {
       throw new AppError("Password incorrect", StatusCode.NOT_FOUND);

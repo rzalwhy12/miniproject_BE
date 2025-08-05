@@ -1,3 +1,4 @@
+import { EventStatus } from "../../prisma/generated/client";
 import { prisma } from "../config/prisma";
 import { IDataEvent } from "../dto/req/eventReq.dto";
 import { generateVoucherCode } from "../utils/generateCodeVoucher";
@@ -169,9 +170,20 @@ class EventRepository {
     });
   };
 
-  public reporting = async (organizerId: number) => {
+  public findMyEvent = async (organizerId: number, status: string) => {
     return await prisma.event.findMany({
-      where: { id: organizerId },
+      where: {
+        organizerId: organizerId,
+        eventStatus: status as EventStatus,
+      },
+      include: {
+        ticketTypes: true,
+        transactions: true,
+        reviews: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
   };
 }
