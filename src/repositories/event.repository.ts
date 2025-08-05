@@ -70,6 +70,13 @@ class EventRepository {
       },
     });
   };
+  public isHaveBankAccount = async (organizerId: number) => {
+    return await prisma.user.findUnique({
+      where: {
+        id: organizerId,
+      },
+    });
+  };
 
   //update event
   public updateEventRepo = async (eventId: number, eventCreate: IDataEvent) => {
@@ -159,6 +166,12 @@ class EventRepository {
   public deleteEvent = async (eventId: number) => {
     return await prisma.event.delete({
       where: { id: eventId },
+    });
+  };
+
+  public reporting = async (organizerId: number) => {
+    return await prisma.event.findMany({
+      where: { id: organizerId },
     });
   };
 }

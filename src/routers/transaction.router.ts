@@ -24,6 +24,10 @@ class TransactionRouter {
       "/confirmation/:transactionId",
       this.transactionController.organizerResponse
     );
+    this.route.get(
+      "/order-list",
+      this.transactionController.getTransactionOrder
+    );
   };
 
   public getRouter = () => {

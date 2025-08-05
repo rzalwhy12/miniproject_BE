@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verifyToken } from "../middleware/verifyToken";
 import AccountController from "../controllers/accounts.controller";
 import { uploadMemory } from "../middleware/uploader";
+import AuthValidator from "../middleware/validations/auth.validation";
 
 class AccountRouter {
   private route: Router;
@@ -11,6 +12,7 @@ class AccountRouter {
   //end controller deklarasi
 
   //start middleware deklarasi
+  private authValidation = new AuthValidator();
   //end middleware deklarasi
 
   constructor() {
@@ -26,6 +28,11 @@ class AccountRouter {
       "/update-profile-image",
       uploadMemory().single("profileImage"),
       this.accountController.updateProfile
+    );
+    this.route.patch(
+      "/update-password",
+      this.authValidation.changePassword,
+      this.accountController.changePassword
     );
   };
 

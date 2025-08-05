@@ -5,7 +5,7 @@ import { SuccessMsg } from "../constants/successMessage.enum";
 import { StatusCode } from "../constants/statusCode.enum";
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { sendResSuccess } from "../utils/SendResSuccess";
-import { mapUserToDTO } from "../mappers/user.mapper";
+import { mapUserToRes } from "../mappers/user.mapper";
 import { generateToken } from "../utils/generateToken";
 import AuthRepository from "../repositories/auth.repository";
 import App from "../app";

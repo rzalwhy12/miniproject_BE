@@ -58,6 +58,23 @@ class AuthValidator {
       .withMessage("password is not strong enough"),
     validationHandler,
   ];
+  public changePassword = [
+    body("oldPassword").notEmpty().withMessage("Password lama wajib diisi"),
+
+    body("newPassword")
+      .notEmpty()
+      .withMessage("Password baru wajib diisi")
+      .isStrongPassword({
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+      })
+      .withMessage("Password baru kurang kuat"),
+
+    validationHandler,
+  ];
 }
 
 export default AuthValidator;
