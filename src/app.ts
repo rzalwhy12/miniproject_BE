@@ -12,6 +12,8 @@ import { TokenExpiredError } from "jsonwebtoken";
 import AccountRouter from "./routers/account.router";
 import EventRouter from "./routers/event.router";
 import TransactionRouter from "./routers/transaction.router";
+import ReviewRouter from "./routers/review.router";
+
 
 const PORT: string = process.env.PORT || "8181";
 
@@ -35,6 +37,7 @@ class App {
     const accountRouter: AccountRouter = new AccountRouter();
     const eventRouter: EventRouter = new EventRouter();
     const transaction: TransactionRouter = new TransactionRouter();
+    const review : ReviewRouter = new ReviewRouter();
 
     this.app.get("/", (req: Request, res: Response) => {
       res.status(200).send("<h1>Test Tiket Backend</h1>");
@@ -44,6 +47,7 @@ class App {
     this.app.use("/account", accountRouter.getRouter());
     this.app.use("/event", eventRouter.getRouter());
     this.app.use("/transaction", transaction.getRouter());
+    this.app.use("/review",review.getRouter());
 
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));

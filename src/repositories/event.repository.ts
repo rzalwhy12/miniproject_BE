@@ -186,6 +186,83 @@ class EventRepository {
       },
     });
   };
+
+  public findAllEvents = async () => {
+    return await prisma.event.findMany({
+      // Mengambil semua event tanpa filter eventStatus
+      include: {
+        ticketTypes: true,
+        organizer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  };
+
+  public findEventById = async (eventId: number) => {
+    return await prisma.event.findUnique({
+      where: {
+        id: eventId,
+      },
+      include: {
+        ticketTypes: true,
+        vouchers: true,
+        organizer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  };
+
+  public findEventBySlug = async (slug: string) => {
+    return await prisma.event.findUnique({
+      where: {
+        slug: slug,
+      },
+      include: {
+        ticketTypes: true,
+        vouchers: true,
+        organizer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  };
 }
 
 export default EventRepository;
