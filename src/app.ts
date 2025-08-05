@@ -42,7 +42,6 @@ class App {
 
     this.app.use("/auth", authrouter.getRouter()); //jangan lupa tanda kurung buat jalanin methodnya
     this.app.use("/account", accountRouter.getRouter());
-
     this.app.use("/event", eventRouter.getRouter());
     this.app.use("/transaction", transaction.getRouter());
 

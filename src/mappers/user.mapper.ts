@@ -1,14 +1,27 @@
 import { User } from "../../prisma/generated/client";
 
-//function unutk reassign user scema ke interface user yang buat dikirim ke FE
-export const mapUserToDTO = (user: User) => {
-  return {
-    name: user.name,
-    email: user.name,
-    noTlp: user.noTlp,
-    birthDate: user.birthDate,
-    gender: user.gender,
-    profileImage: user.profileImage,
-    username: user.username,
-  };
-};
+// Function untuk mapping User model ke DTO buat dikirim ke FE
+export const mapUserToRes = (
+  user: User,
+  couponDiscount: number | null = null,
+  expireCoupon: Date | null = null,
+  totalPoint: number = 0,
+  expirePoint: Date | null = null
+) => ({
+  name: user.name,
+  email: user.email,
+  username: user.username,
+  profileImage: user.profileImage,
+  noTlp: user.noTlp,
+  birthDate: user.birthDate,
+  gender: user.gender,
+  bankName: user.bankName,
+  bankAccount: user.bankAccount,
+  accountHolder: user.accountHolder,
+  referralCode: user.referralCode,
+  isVerified: user.isVerified,
+  couponDiscount,
+  expireCoupon,
+  totalPoint,
+  expirePoint,
+});

@@ -11,6 +11,18 @@ export class EventService {
     dataEvent: IDataEvent,
     organizerId: number
   ) => {
+    const organizer = await this.eventRepository.isHaveBankAccount(organizerId);
+    if (
+      !organizer?.bankName ||
+      !organizer?.accountHolder ||
+      !organizer.bankAccount
+    ) {
+      throw new AppError(
+        "Organizer Must Have Bank Account",
+        StatusCode.BAD_REQUEST
+      );
+    }
+
     const created = await this.eventRepository.createEventRepo(
       dataEvent,
       organizerId

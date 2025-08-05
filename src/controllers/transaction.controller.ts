@@ -9,6 +9,7 @@ import { RoleName, TransactionStatus } from "../../prisma/generated/client";
 import TransactionRepository from "../repositories/transaction.repository";
 import { cloudinaryUpload } from "../config/cloudinary";
 import { UploadApiResponse } from "cloudinary";
+import { mapOrderListToRes } from "../mappers/transaction.mapper";
 
 class TransactionController {
   private transactionService = new TransactionService();
@@ -136,7 +137,12 @@ class TransactionController {
       const transaction = await this.transactionService.getListOrder(
         organizerId
       );
-      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, transaction);
+      sendResSuccess(
+        res,
+        SuccessMsg.OK,
+        StatusCode.OK,
+        mapOrderListToRes(transaction)
+      );
     } catch (error) {
       next(error);
     }

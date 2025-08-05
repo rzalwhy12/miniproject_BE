@@ -155,6 +155,16 @@ class EventConttroller {
       next(error);
     }
   };
+  public reportingEvent = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default EventConttroller;

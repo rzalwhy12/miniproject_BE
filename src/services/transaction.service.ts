@@ -6,6 +6,7 @@ import { TransactionStatus } from "../../prisma/generated/client";
 import { sendEmail } from "../utils/sendEmail";
 import { sendTicketTemplate } from "../template/sendTicket.template";
 import { prisma } from "../config/prisma";
+import { rejectPaymentProofTemplate } from "../template/sendTicketReject.template";
 
 class TransactionService {
   private transactionRepository = new TransactionRepository();
@@ -251,6 +252,7 @@ class TransactionService {
         status
       );
 
+      // Jika user pakai kupon, tandai kuponnya tidak digunakan
       if (tx.useCoupon) {
         const findCoupon = await this.transactionRepository.findCoupon(
           tx.customerId
@@ -264,9 +266,30 @@ class TransactionService {
         await this.transactionRepository.rejectUseCoupon(findCoupon.coupon.id);
       }
 
+      // Jika user pakai poin, kembalikan poinnya
       if (tx.usePoint) {
         await this.transactionRepository.rejectUsePoint(tx.customerId);
       }
+
+      // Ambil data event & customer untuk email
+      const event = await this.transactionRepository.findEventId(
+        findTx.eventId
+      );
+      const user = await this.transactionRepository.findCustomer(tx.customerId);
+
+      if (!user || !event) {
+        throw new AppError(
+          "Failed To Send Email",
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+
+      // Kirim email penolakan dengan template HTML
+      await sendEmail(
+        user.email,
+        `Bukti Pembayaran Ditolak - ${event.name}`,
+        rejectPaymentProofTemplate(user.name)
+      );
 
       return tx;
     }
