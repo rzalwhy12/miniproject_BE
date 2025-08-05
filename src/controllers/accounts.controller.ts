@@ -93,8 +93,8 @@ class AccountController {
   ) => {
     try {
       const userId = res.locals.decript.id;
-      const { oldPassword, newPassWord } = req.body;
-      await this.accountService.gantiPassword(userId, oldPassword, newPassWord);
+      const { oldPassword, newPassword } = req.body;
+      await this.accountService.gantiPassword(userId, oldPassword, newPassword);
 
       sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
     } catch (error) {

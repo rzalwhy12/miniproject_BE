@@ -52,4 +52,7 @@ export class EventService {
     }
     return updatedEvent;
   };
+  public myEvent = async (organizerId: number, status: string) => {
+    return await this.eventRepository.findMyEvent(organizerId, status);
+  };
 }

@@ -5,16 +5,15 @@ import EventValidator from "../middleware/validations/event.validator";
 import EventConttroller from "../controllers/event.controller";
 
 class EventRouter {
-    private route: Router;
+  private route: Router;
 
-    //start kontroler deklarasi
-    private eventController = new EventConttroller();
-    //end controller deklarasi
+  //start kontroler deklarasi
+  private eventController = new EventConttroller();
+  //end controller deklarasi
 
-    //start middleware deklarasi
-    private eventValidator = new EventValidator();
-    //end middleware deklarasi
-
+  //start middleware deklarasi
+  private eventValidator = new EventValidator();
+  //end middleware deklarasi
 
   constructor() {
     //inisialisasi
@@ -40,13 +39,12 @@ class EventRouter {
       this.eventController.updateEvent
     );
     this.route.delete("/delete/:eventId", this.eventController.deleteEvent);
+    this.route.get("/my-event", this.eventController.getMyEvent);
   };
 
-
-
-    public getRouter = () => {
-        return this.route;
-    };
+  public getRouter = () => {
+    return this.route;
+  };
 }
 
 export default EventRouter;

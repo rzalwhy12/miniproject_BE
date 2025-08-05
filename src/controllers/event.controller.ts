@@ -155,12 +155,16 @@ class EventConttroller {
       next(error);
     }
   };
-  public reportingEvent = async (
+  public getMyEvent = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
+      const organizerId = res.locals.decript.id;
+      const status = req.params.status;
+      const myEvent = await this.eventService.myEvent(organizerId, status);
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, myEvent);
     } catch (error) {
       next(error);
     }
