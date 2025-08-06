@@ -29,7 +29,7 @@ class EventRouter {
     this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
     this.route.get("/my-event", this.eventController.getMyEvent); // This must come before /:eventId
     this.route.get("/:eventId", this.eventController.getEvent); // Get event by ID
-    
+
     this.route.post(
       "/create",
       this.eventValidator.createEventValidator,
@@ -48,11 +48,9 @@ class EventRouter {
     );
     this.route.delete("/delete/:eventId", this.eventController.deleteEvent);
 
-    this.route.get("/my-event", this.eventController.getMyEvent);
+    this.route.get("/my-event/:status", this.eventController.getMyEvent);
     this.route.get("/reporting/:slug", reporting);
     this.route.get("/reporting-all", reportingAll);
-
-
   };
 
   public getRouter = () => {
