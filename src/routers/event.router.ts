@@ -3,6 +3,7 @@ import { verifyToken } from "../middleware/verifyToken";
 import { uploadMemory } from "../middleware/uploader";
 import EventValidator from "../middleware/validations/event.validator";
 import EventConttroller from "../controllers/event.controller";
+import { reporting, reportingAll } from "../controllers/reporting.controller";
 
 class EventRouter {
   private route: Router;
@@ -40,6 +41,8 @@ class EventRouter {
     );
     this.route.delete("/delete/:eventId", this.eventController.deleteEvent);
     this.route.get("/my-event", this.eventController.getMyEvent);
+    this.route.get("/reporting/:slug", reporting);
+    this.route.get("/reporting-all", reportingAll);
   };
 
   public getRouter = () => {
