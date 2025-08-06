@@ -10,6 +10,13 @@ class AccountRepository {
       },
     });
   };
+  public async getCoupons(userId: number) {
+    return await prisma.coupon.findMany({
+      where: {
+        id: userId,
+      },
+    });
+  }
   public updateUser = async (id: number, dataUser: IUpdateUser) => {
     return await prisma.user.update({
       where: {
