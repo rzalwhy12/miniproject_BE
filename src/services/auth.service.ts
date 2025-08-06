@@ -70,7 +70,6 @@ class AuthServices {
     const urlFE = `${process.env.BASIC_URL_FE}/verify/${token}`;
     sendEmail(newUser.email, subject, verifyEmailTemplate(newUser.name, urlFE));
     await this.authRepository.addRole(newUser.id);
-    console.log(newUser);
     return newUser;
   };
   //live isexist email dan username service

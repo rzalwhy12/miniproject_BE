@@ -8,6 +8,8 @@ import { cloudinaryUpload } from "../config/cloudinary";
 import { UploadApiResponse } from "cloudinary";
 import AccountRepository from "../repositories/account.reposetory";
 import { mapUserToRes } from "../mappers/user.mapper";
+import AppError from "../errors/AppError";
+import { send } from "process";
 
 class AccountController {
   private accountService = new AccountService();
@@ -96,6 +98,22 @@ class AccountController {
       const { oldPassword, newPassword } = req.body;
       await this.accountService.gantiPassword(userId, oldPassword, newPassword);
 
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
+    } catch (error) {
+      next(error);
+    }
+  };
+  public verifyEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = res.locals.decript.id;
+      if (!userId) {
+        throw new AppError("UserId Required", StatusCode.BAD_REQUEST);
+      }
+      const user = await this.accountService.requestEmialVerify(userId);
       sendResSuccess(res, SuccessMsg.OK, StatusCode.OK);
     } catch (error) {
       next(error);

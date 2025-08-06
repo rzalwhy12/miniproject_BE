@@ -9,7 +9,7 @@ interface IObjectToken {
   id: number;
   email: string;
   isverified: boolean;
-  activeRole: RoleName;
+  activeRole?: RoleName;
   rememberMe: boolean;
 }
 export const generateToken = (

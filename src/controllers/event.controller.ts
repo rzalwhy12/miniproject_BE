@@ -170,11 +170,7 @@ class EventConttroller {
     }
   };
 
-  public getEvent = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  public getEvent = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventId, slug } = req.params;
       const { page = 1, limit = 10 } = req.query;
@@ -192,13 +188,23 @@ class EventConttroller {
           throw new AppError("Invalid event ID", StatusCode.BAD_REQUEST);
         }
         const event = await this.eventService.getEventById(eventIdNum);
-        return sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, mapEventToRes(event));
+        return sendResSuccess(
+          res,
+          SuccessMsg.OK,
+          StatusCode.OK,
+          mapEventToRes(event)
+        );
       }
 
       // If slug is provided, get event by slug
       if (slug) {
         const event = await this.eventService.getEventBySlug(slug);
-        return sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, mapEventToRes(event));
+        return sendResSuccess(
+          res,
+          SuccessMsg.OK,
+          StatusCode.OK,
+          mapEventToRes(event)
+        );
       }
     } catch (error) {
       next(error);

@@ -1,6 +1,5 @@
 import { User } from "../../prisma/generated/client";
 
-// Function untuk mapping User model ke DTO buat dikirim ke FE
 export const mapUserToRes = (
   user: User,
   couponDiscount: number | null = null,

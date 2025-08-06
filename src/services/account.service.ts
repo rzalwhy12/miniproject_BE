@@ -5,6 +5,9 @@ import { SuccessMsg } from "../constants/successMessage.enum";
 import { IUpdateUser } from "../dto/req/userReq.dto";
 import AppError from "../errors/AppError";
 import AccountRepository from "../repositories/account.reposetory";
+import { sendEmail } from "../utils/sendEmail";
+import { verifyEmailTemplate } from "../template/verifyEmail.template";
+import { generateToken } from "../utils/generateToken";
 
 class AccountService {
   private accountRepository = new AccountRepository();
@@ -52,6 +55,29 @@ class AccountService {
       throw new AppError("Cannot Change Password", StatusCode.BAD_REQUEST);
     }
     return updatePass;
+  };
+  public requestEmialVerify = async (userId: number) => {
+    const user = await this.accountRepository.getDataUser(userId);
+    if (!user) {
+      throw new AppError("User Not Found", StatusCode.NOT_FOUND);
+    }
+
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      isverified: user.isVerified,
+      rememberMe: false,
+    });
+    if (!token) {
+      throw new AppError(
+        ErrorMsg.SERVER_MISSING_SECRET_KEY,
+        StatusCode.INTERNAL_SERVER_ERROR
+      );
+    }
+    const subject = "Verify Your Email";
+    const urlFE = `${process.env.BASIC_URL_FE}/verify/${token}`;
+    sendEmail(user.email, subject, verifyEmailTemplate(user.name, urlFE));
+    return user;
   };
 }
 
