@@ -1,3 +1,4 @@
+
 import { compare } from "bcrypt";
 import { ErrorMsg } from "../constants/errorMessage.enum";
 import { StatusCode } from "../constants/statusCode.enum";
@@ -26,6 +27,12 @@ class AccountService {
     }
     return user;
   };
+
+    public async getCoupons(userId: number) {
+    return await this.accountRepository.getCoupons(userId);
+  }
+
+  
   public gantiPassword = async (
     userId: number,
     oldPassword: string,

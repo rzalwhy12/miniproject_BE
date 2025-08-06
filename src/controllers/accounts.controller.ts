@@ -1,3 +1,4 @@
+
 import { NextFunction, Request, Response } from "express";
 import AccountService from "../services/account.service";
 import { sendResSuccess } from "../utils/SendResSuccess";
@@ -86,6 +87,18 @@ class AccountController {
       next(error);
     }
   };
+
+    public getCoupons = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = res.locals.decript.id;
+      const coupons = await this.accountService.getCoupons(userId);
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, coupons);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+
   public changePassword = async (
     req: Request,
     res: Response,

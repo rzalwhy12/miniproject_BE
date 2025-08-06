@@ -23,6 +23,7 @@ class AccountRouter {
   private initializeRouter = (): void => {
     this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
     this.route.get("/get-data", this.accountController.getDataUser);
+    this.route.get("/coupons", this.accountController.getCoupons);
     this.route.patch("/update-data", this.accountController.updateProfile);
     this.route.patch(
       "/update-profile-image",

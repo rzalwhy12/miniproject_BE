@@ -189,7 +189,7 @@ class EventRepository {
 
   public findAllEvents = async () => {
     return await prisma.event.findMany({
-      // Mengambil semua event tanpa filter eventStatus
+      where:{eventStatus:EventStatus.PUBLISHED},
       include: {
         ticketTypes: true,
         organizer: {
