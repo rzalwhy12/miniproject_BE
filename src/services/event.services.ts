@@ -55,4 +55,24 @@ export class EventService {
   public myEvent = async (organizerId: number, status: string) => {
     return await this.eventRepository.findMyEvent(organizerId, status);
   };
+
+  public getAllEvents = async () => {
+    return await this.eventRepository.findAllEvents();
+  };
+
+  public getEventById = async (eventId: number) => {
+    const event = await this.eventRepository.findEventById(eventId);
+    if (!event) {
+      throw new AppError("Event not found", StatusCode.NOT_FOUND);
+    }
+    return event;
+  };
+
+  public getEventBySlug = async (slug: string) => {
+    const event = await this.eventRepository.findEventBySlug(slug);
+    if (!event) {
+      throw new AppError("Event not found", StatusCode.NOT_FOUND);
+    }
+    return event;
+  };
 }
