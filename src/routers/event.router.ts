@@ -26,6 +26,8 @@ class EventRouter {
     this.route.get("/", this.eventController.getEvent); // Get all events
     this.route.get("/:slug", this.eventController.getEvent); // Get event by slug
 
+    this.route.get("/transaction-event", this.eventController.getTransactionEvent);
+
     this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
     this.route.get("/my-event", this.eventController.getMyEvent); // This must come before /:eventId
     this.route.get("/:eventId", this.eventController.getEvent); // Get event by ID

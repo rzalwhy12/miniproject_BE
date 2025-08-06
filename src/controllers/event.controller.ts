@@ -12,6 +12,18 @@ import EventRepository from "../repositories/event.repository";
 import { mapEventToRes } from "../mappers/event.mapper";
 
 class EventConttroller {
+  public getTransactionEvent = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const events = await this.eventService.getTransactionEvent();
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, events);
+    } catch (error) {
+      next(error);
+    }
+  };
   private eventService = new EventService();
   private eventRepository = new EventRepository();
   //define method
@@ -101,7 +113,7 @@ class EventConttroller {
       );
 
       if (!isOwner) {
-        throw new AppError("your not the owner", StatusCode.UNAUTHORIZED);
+        throw new AppError('"your not the owner"', StatusCode.UNAUTHORIZED);
       }
 
       if (isNaN(eventId)) {

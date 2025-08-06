@@ -12,6 +12,22 @@ import { UploadApiResponse } from "cloudinary";
 import { mapOrderListToRes } from "../mappers/transaction.mapper";
 
 class TransactionController {
+  public getTransactionByCode = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { transactionCode } = req.params;
+      const transaction = await this.transactionService.getTransactionByCode(transactionCode);
+      if (!transaction) {
+        throw new AppError("Transaction not found", StatusCode.NOT_FOUND);
+      }
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, transaction);
+    } catch (error) {
+      next(error);
+    }
+  };
   private transactionService = new TransactionService();
   private transactionRepository = new TransactionRepository();
   public transaction = async (
