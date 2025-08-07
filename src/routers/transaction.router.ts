@@ -28,6 +28,10 @@ class TransactionRouter {
       "/order-list",
       this.transactionController.getTransactionOrder
     );
+    this.route.get(
+      "/:transactionCode",
+      this.transactionController.getTransactionByCode
+    );
   };
 
   public getRouter = () => {

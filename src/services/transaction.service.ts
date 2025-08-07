@@ -9,6 +9,9 @@ import { prisma } from "../config/prisma";
 import { rejectPaymentProofTemplate } from "../template/sendTicketReject.template";
 
 class TransactionService {
+  public getTransactionByCode = async (transactionCode: string) => {
+    return await this.transactionRepository.getTransactionByCode(transactionCode);
+  };
   private transactionRepository = new TransactionRepository();
 
   //status awal waiting payment

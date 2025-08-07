@@ -11,6 +11,20 @@ export interface IOrderItemInput {
 }
 
 class TransactionRepository {
+  public getTransactionByCode = async (transactionCode: string) => {
+    return await prisma.transaction.findUnique({
+      where: { transactionCode },
+      include: {
+        user: true,
+        event: true,
+        orderItems: {
+          include: {
+            ticketType: true,
+          },
+        },
+      },
+    });
+  };
   public createTransaction = async (
     customerId: number,
     data: ITransactionCreate,

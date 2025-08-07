@@ -5,6 +5,20 @@ import { generateVoucherCode } from "../utils/generateCodeVoucher";
 import { generateSlug } from "../utils/slugFly";
 
 class EventRepository {
+  public getTransactionEvent = async () => {
+    return await prisma.event.findMany({
+      include: {
+        _count: {
+          select: { transactions: true },
+        },
+      },
+      orderBy: {
+        transactions: {
+          _count: 'desc',
+        },
+      },
+    });
+  };
   //create event
   public createEventRepo = async (
     eventCreate: IDataEvent,

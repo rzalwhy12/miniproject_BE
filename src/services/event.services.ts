@@ -5,6 +5,9 @@ import AppError from "../errors/AppError";
 import eventRepository from "../repositories/event.repository";
 
 export class EventService {
+  public getTransactionEvent = async () => {
+    return await this.eventRepository.getTransactionEvent();
+  };
   private eventRepository = new eventRepository();
 
   public createEventService = async (
