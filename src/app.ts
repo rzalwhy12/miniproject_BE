@@ -15,7 +15,7 @@ import TransactionRouter from "./routers/transaction.router";
 import ReviewRouter from "./routers/review.router";
 import VoucherRouter from "./routers/voucher.router";
 import TicketRouter from "./routers/ticket.router";
-
+import ReportingRouter from "./routers/reporting.router";
 
 const PORT: string = process.env.PORT || "8181";
 
@@ -39,9 +39,10 @@ class App {
     const accountRouter: AccountRouter = new AccountRouter();
     const eventRouter: EventRouter = new EventRouter();
     const transaction: TransactionRouter = new TransactionRouter();
-    const review : ReviewRouter = new ReviewRouter();
+    const review: ReviewRouter = new ReviewRouter();
     const voucher: VoucherRouter = new VoucherRouter();
     const ticket: TicketRouter = new TicketRouter();
+    const reportingRouter: ReportingRouter = new ReportingRouter();
 
     this.app.get("/", (req: Request, res: Response) => {
       res.status(200).send("<h1>Test Tiket Backend</h1>");
@@ -51,9 +52,10 @@ class App {
     this.app.use("/account", accountRouter.getRouter());
     this.app.use("/event", eventRouter.getRouter());
     this.app.use("/transaction", transaction.getRouter());
-    this.app.use("/review",review.getRouter());
+    this.app.use("/review", review.getRouter());
     this.app.use("/voucher", voucher.getRouter());
     this.app.use("/ticket", ticket.getRouter());
+    this.app.use("/reporting-event", reportingRouter.getRouter());
 
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       next(new AppError(ErrorMsg.ROUTE_NOT_FOUND, StatusCode.BAD_REQUEST));

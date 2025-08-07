@@ -3,13 +3,14 @@ import { verifyToken } from "../middleware/verifyToken";
 import { uploadMemory } from "../middleware/uploader";
 import EventValidator from "../middleware/validations/event.validator";
 import EventConttroller from "../controllers/event.controller";
-import { reporting, reportingAll } from "../controllers/reporting.controller";
+import ReportingController from "../controllers/reporting.controller";
 
 class EventRouter {
   private route: Router;
 
   //start kontroler deklarasi
   private eventController = new EventConttroller();
+  private reportingController = new ReportingController();
   //end controller deklarasi
 
   //start middleware deklarasi
@@ -22,7 +23,6 @@ class EventRouter {
     this.initializeRouter();
   }
   private initializeRouter = (): void => {
-    // Public routes (no auth required)
     this.route.get("/", this.eventController.getEvent); // Get all events
     this.route.get("/:slug", this.eventController.getEvent); // Get event by slug
 
@@ -47,10 +47,9 @@ class EventRouter {
       this.eventController.updateEvent
     );
     this.route.delete("/delete/:eventId", this.eventController.deleteEvent);
+    this.route.get("/edit/:slug", this.eventController.getEditEvent);
 
     this.route.get("/my-event/:status", this.eventController.getMyEvent);
-    this.route.get("/reporting/:slug", reporting);
-    this.route.get("/reporting-all", reportingAll);
   };
 
   public getRouter = () => {

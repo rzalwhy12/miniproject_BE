@@ -35,6 +35,7 @@ class AccountRouter {
       this.authValidation.changePassword,
       this.accountController.changePassword
     );
+    this.route.get("/verify-email", this.accountController.verifyEmail);
   };
 
   public getRouter = () => {

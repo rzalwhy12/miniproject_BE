@@ -1,15 +1,16 @@
+// seed.ts
 import {
   PrismaClient,
-  EventCategory,
   EventStatus,
+  EventCategory,
   Gender,
   RoleName,
   TransactionStatus,
   VoucherStatus,
 } from "./generated/client";
-import { hashPassword } from "../src/utils/hash";
-import slugify from "slugify";
 import { faker } from "@faker-js/faker";
+import slugify from "slugify";
+import { hashPassword } from "../src/utils/hash";
 import { generateReferralCode } from "../src/utils/generateReferralCode";
 import { generateTransactionCode } from "../src/utils/transactionCode";
 import { generateVoucherCode } from "../src/utils/generateCodeVoucher";
@@ -17,7 +18,7 @@ import { generateVoucherCode } from "../src/utils/generateCodeVoucher";
 const prisma = new PrismaClient();
 
 async function main() {
-  // 🔄 Hapus semua data lama
+  // Clear
   await prisma.point.deleteMany();
   await prisma.coupon.deleteMany();
   await prisma.referral.deleteMany();
@@ -31,7 +32,7 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.role.deleteMany();
 
-  // 🎭 Roles
+  // Roles
   await prisma.role.createMany({
     data: [
       { id: 1, name: RoleName.CUSTOMER },
@@ -41,48 +42,45 @@ async function main() {
 
   const baseDate = new Date();
 
-  // 👤 User utama (fen)
-  const fen = await prisma.user.create({
+  // Main user
+  const refUser = await prisma.user.create({
     data: {
       username: "fenkindle",
       email: "fenkindle@gmail.com",
       password: await hashPassword("1234"),
       name: "Fen Kindle",
-      referralCode: "FENREF",
       gender: Gender.MALE,
+      referralCode: "FENREF",
       profileImage: faker.image.avatar(),
-      bankName: faker.company.name(),
       bankAccount: faker.finance.accountNumber(),
+      bankName: faker.company.name(),
       accountHolder: faker.person.fullName(),
       roles: {
         createMany: {
           data: [
             { roleId: 1, isActive: true },
-            { roleId: 2, isActive: false },
+            { roleId: 2, isActive: true },
           ],
         },
       },
     },
   });
 
-  const allUsers = [fen];
+  const allUsers = [refUser];
 
-  // 👥 Tambahkan 5 user dengan referral logic
-  for (let i = 1; i <= 5; i++) {
-    const useReferral = i % 2 === 0; // genap daftar dengan referral
-    const referrer = useReferral ? fen : null;
-
+  for (let i = 0; i < 14; i++) {
+    const referred = i % 2 === 0;
     const referralCode = await generateReferralCode();
 
-    const newUser = await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         username: `user${i}`,
-        email: `user${i}@example.com`,
+        email: `user${i}@mail.com`,
         password: await hashPassword("1234"),
         name: faker.person.fullName(),
-        referralCode,
         gender: i % 2 === 0 ? Gender.FEMALE : Gender.MALE,
-        profileImage: faker.image.personPortrait(),
+        referralCode,
+        profileImage: faker.image.avatar(),
         bankAccount: faker.finance.accountNumber(),
         bankName: faker.company.name(),
         accountHolder: faker.person.fullName(),
@@ -97,18 +95,16 @@ async function main() {
       },
     });
 
-    allUsers.push(newUser);
+    allUsers.push(user);
 
-    // Jika pakai referral code
-    if (referrer) {
+    if (referred) {
       const referral = await prisma.referral.create({
         data: {
-          referrerId: referrer.id,
-          referredId: newUser.id,
+          referredId: user.id,
+          referrerId: refUser.id,
         },
       });
 
-      // Buat coupon untuk user baru
       await prisma.coupon.create({
         data: {
           discount: 10,
@@ -117,10 +113,9 @@ async function main() {
         },
       });
 
-      // Tambahkan point ke referrer
       await prisma.point.create({
         data: {
-          userId: referrer.id,
+          userId: refUser.id,
           amount: 10000,
           expiresAt: new Date(Date.now() + 90 * 86400000),
         },
@@ -128,112 +123,237 @@ async function main() {
     }
   }
 
-  // 🎫 Event + Ticket + Voucher + Transaction + Review
-  const statuses = Object.values(TransactionStatus);
+  const eventList = [];
+  const txStatuses = [
+    "WAITING_CONFIRMATION",
+    "WAITING_PAYMENT",
+    "DONE",
+    "REJECT",
+  ];
 
-  for (let i = 1; i <= 15; i++) {
+  for (let i = 0; i < 20; i++) {
+    const isDraft = i < 5;
+    const isPast = i >= 5 && i < 10;
+    const isPublished = i >= 10;
+
     const organizer = faker.helpers.arrayElement(allUsers);
-    const slug = slugify(`${faker.word.words(3)}-${Date.now()}-${i}`, {
-      lower: true,
-    });
+    const slug = slugify(`${faker.word.words(2)}-${i}`, { lower: true });
 
     const event = await prisma.event.create({
       data: {
-        name: faker.company.name(),
+        name: `Festival ${faker.commerce.productAdjective()} ${faker.commerce.productName()}`,
         slug,
         location: faker.location.city(),
+        description: `<p>${faker.lorem.paragraph()}</p><ul><li>${faker.lorem.sentence()}</li><li>${faker.lorem.sentence()}</li></ul>`,
+        syaratKetentuan: `
+          <ul>
+            <li>Tiket tidak dapat dikembalikan</li>
+            <li>Harap membawa bukti transaksi saat masuk</li>
+            <li>Gunakan referral untuk dapatkan <strong>kupon diskon 10%</strong></li>
+          </ul>
+        `,
         banner: faker.image.url(),
-        description: faker.lorem.paragraphs(2),
-        syaratKetentuan: faker.lorem.sentences(3),
         startDate: new Date(baseDate.getTime() + i * 86400000),
-        endDate: new Date(baseDate.getTime() + (i + 2) * 86400000),
+        endDate: new Date(baseDate.getTime() + (i + 1) * 86400000),
         organizerId: organizer.id,
         category: faker.helpers.arrayElement(Object.values(EventCategory)),
-        eventStatus: faker.helpers.arrayElement(Object.values(EventStatus)),
-        vouchers: {
-          create: {
-            code: await generateVoucherCode(),
-            discount: faker.number.int({ min: 5, max: 25 }),
-            startDate: new Date(),
-            endDate: new Date(Date.now() + 30 * 86400000),
-            status: VoucherStatus.ACTIVE,
-          },
-        },
+        eventStatus: isDraft
+          ? EventStatus.DRAFT
+          : isPast
+          ? EventStatus.PAST
+          : EventStatus.PUBLISHED,
         ticketTypes: {
           createMany: {
             data: [
               {
                 name: "Reguler",
-                price: 75000 + i * 5000,
-                quota: 50,
+                price: 50000 + i * 1000,
+                quota: 100,
               },
               {
                 name: "VIP",
-                price: 150000 + i * 7000,
-                quota: 20,
+                price: 100000 + i * 1500,
+                quota: 50,
               },
             ],
           },
         },
+        vouchers: {
+          create: {
+            code: await generateVoucherCode(),
+            discount: 10,
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 30 * 86400000),
+            status: VoucherStatus.ACTIVE,
+          },
+        },
       },
-      include: {
-        ticketTypes: true,
+      include: { ticketTypes: true },
+    });
+
+    eventList.push(event);
+  }
+
+  let txCount = 0;
+  while (txCount < 60) {
+    const event = faker.helpers.arrayElement(
+      eventList.filter((e) => e.eventStatus !== EventStatus.DRAFT)
+    );
+    const ticket = faker.helpers.arrayElement(event.ticketTypes);
+    const buyer = faker.helpers.arrayElement(allUsers);
+    const quantity = faker.number.int({ min: 1, max: 3 });
+    const total = ticket.price * quantity;
+    const status = faker.helpers.arrayElement(txStatuses);
+
+    const tx = await prisma.transaction.create({
+      data: {
+        transactionCode: await generateTransactionCode(),
+        customerId: buyer.id,
+        eventId: event.id,
+        totalPrice: total,
+        status: TransactionStatus.WAITING_CONFIRMATION,
+        expiredAt: new Date(Date.now() + 86400000),
+        paymentProof: faker.image.urlPicsumPhotos(),
+        orderItems: {
+          create: {
+            ticketTypeId: ticket.id,
+            quantity,
+            subTotal: total,
+          },
+        },
       },
     });
 
-    // Buat 1–5 transaksi acak
-    const buyerCandidates = allUsers.filter((u) => u.id !== organizer.id);
-    const numTx = faker.number.int({ min: 1, max: 5 });
+    if (status === "DONE") {
+      await prisma.review.create({
+        data: {
+          userId: buyer.id,
+          eventId: event.id,
+          rating: faker.number.int({ min: 3, max: 5 }),
+          comment: faker.lorem.sentence(),
+        },
+      });
+    }
 
-    for (let j = 0; j < numTx; j++) {
-      const buyer = faker.helpers.arrayElement(buyerCandidates);
-      const status = faker.helpers.arrayElement(statuses);
-      const ticketType = faker.helpers.arrayElement(event.ticketTypes);
-      const quantity = faker.number.int({ min: 1, max: 3 });
-      const totalPrice = ticketType.price * quantity;
+    txCount++;
+  }
 
-      const tx = await prisma.transaction.create({
+  // Tambahan: 3 event dengan transaksi tinggi untuk testing reporting
+  for (let j = 0; j < 3; j++) {
+    const slug = slugify(`high-traffic-event-${j}`, { lower: true });
+    const organizer = faker.helpers.arrayElement(allUsers);
+
+    const event = await prisma.event.create({
+      data: {
+        name: `Big Festival ${faker.commerce.productName()}`,
+        slug,
+        location: faker.location.city(),
+        description: `<p>${faker.lorem.paragraph()}</p>`,
+        syaratKetentuan: `<ul><li>Tidak bisa refund</li></ul>`,
+        banner: faker.image.url(),
+        startDate: new Date(Date.now() - 10 * 86400000),
+        endDate: new Date(Date.now() - 9 * 86400000),
+        organizerId: organizer.id,
+        category: EventCategory.MUSIC,
+        eventStatus: EventStatus.PAST,
+        ticketTypes: {
+          createMany: {
+            data: [
+              { name: "Reguler", price: 50000, quota: 200 },
+              { name: "VIP", price: 100000, quota: 100 },
+            ],
+          },
+        },
+      },
+      include: { ticketTypes: true },
+    });
+
+    for (let t = 0; t < 30; t++) {
+      const buyer = faker.helpers.arrayElement(allUsers);
+      const ticket = faker.helpers.arrayElement(event.ticketTypes);
+      const quantity = faker.number.int({ min: 1, max: 5 });
+      const total = ticket.price * quantity;
+
+      await prisma.transaction.create({
         data: {
           transactionCode: await generateTransactionCode(),
           customerId: buyer.id,
           eventId: event.id,
-          status,
-          totalPrice,
+          totalPrice: total,
+          status: TransactionStatus.DONE,
+          expiredAt: new Date(Date.now() - 8 * 86400000),
           paymentProof: faker.image.urlPicsumPhotos(),
-          expiredAt: new Date(Date.now() + 86400000),
           orderItems: {
             create: {
-              ticketTypeId: ticketType.id,
+              ticketTypeId: ticket.id,
               quantity,
-              subTotal: totalPrice,
+              subTotal: total,
             },
           },
         },
       });
 
-      if (status === "DONE") {
-        await prisma.review.create({
-          data: {
-            rating: faker.number.int({ min: 3, max: 5 }),
-            comment: faker.lorem.sentence(),
-            eventId: event.id,
-            userId: buyer.id,
-          },
-        });
-      }
+      await prisma.review.create({
+        data: {
+          userId: buyer.id,
+          eventId: event.id,
+          rating: faker.number.int({ min: 3, max: 5 }),
+          comment: faker.lorem.sentence(),
+        },
+      });
     }
-
-    console.log(`✅ Event ${event.name} selesai dibuat.`);
   }
 
-  console.log("🔥 Semua data berhasil disiapkan!");
+  // Tambahan khusus Fen Kindle: transaksi bervariasi untuk first 6 event
+  for (let i = 0; i < 6; i++) {
+    const event = eventList[i];
+    const ticket = event.ticketTypes[0];
+    const quantity = i + 1;
+    const total = ticket.price * quantity;
+    const statusesFen = [
+      TransactionStatus.DONE,
+      TransactionStatus.REJECTED,
+      TransactionStatus.WAITING_PAYMENT,
+      TransactionStatus.WAITING_CONFIRMATION,
+    ];
+    const statusFen = statusesFen[i % statusesFen.length];
+
+    await prisma.transaction.create({
+      data: {
+        transactionCode: await generateTransactionCode(),
+        customerId: refUser.id,
+        eventId: event.id,
+        totalPrice: total,
+        status: statusFen,
+        expiredAt: new Date(Date.now() + 86400000),
+        paymentProof: faker.image.urlPicsumPhotos(),
+        orderItems: {
+          create: {
+            ticketTypeId: ticket.id,
+            quantity,
+            subTotal: total,
+          },
+        },
+      },
+    });
+
+    if (statusFen === TransactionStatus.DONE) {
+      await prisma.review.create({
+        data: {
+          userId: refUser.id,
+          eventId: event.id,
+          rating: faker.number.int({ min: 4, max: 5 }),
+          comment: `Review Fen Kindle: ${faker.lorem.sentence()}`,
+        },
+      });
+    }
+  }
+
+  console.log(
+    "✅ Seed selesai: 20 event biasa, 3 high-traffic event, 15 user, 60+ transaksi, + transaksi khusus Fen Kindle"
+  );
 }
 
 main()
-  .catch((err) => {
-    console.error("❌ Error seeding data:", err);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
