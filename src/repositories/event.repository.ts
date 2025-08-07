@@ -203,7 +203,7 @@ class EventRepository {
 
   public findAllEvents = async () => {
     return await prisma.event.findMany({
-      where:{eventStatus:EventStatus.PUBLISHED},
+      where: { eventStatus: EventStatus.PUBLISHED },
       include: {
         ticketTypes: true,
         organizer: {
@@ -274,6 +274,15 @@ class EventRepository {
             },
           },
         },
+      },
+    });
+  };
+  public getEditEvent = async (slug: string) => {
+    return await prisma.event.findUnique({
+      where: { slug },
+      include: {
+        ticketTypes: true,
+        vouchers: true,
       },
     });
   };

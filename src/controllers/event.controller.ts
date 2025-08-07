@@ -9,7 +9,7 @@ import { ErrorMsg } from "../constants/errorMessage.enum";
 import { UploadApiResponse } from "cloudinary";
 import { cloudinaryUpload } from "../config/cloudinary";
 import EventRepository from "../repositories/event.repository";
-import { mapEventToRes } from "../mappers/event.mapper";
+import { mapEditEventToRes, mapEventToRes } from "../mappers/event.mapper";
 
 class EventConttroller {
   public getTransactionEvent = async (
@@ -218,6 +218,35 @@ class EventConttroller {
           mapEventToRes(event)
         );
       }
+    } catch (error) {
+      next(error);
+    }
+  };
+  public getEditEvent = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = res.locals.decript.id;
+      const slug = req.params.slug;
+
+      const event = await this.eventRepository.getEditEvent(slug);
+
+      if (!event) {
+        throw new AppError("Event not found", StatusCode.NOT_FOUND);
+      }
+
+      if (event.organizerId !== userId) {
+        throw new AppError("You're not the owner", StatusCode.UNAUTHORIZED);
+      }
+
+      sendResSuccess(
+        res,
+        SuccessMsg.OK,
+        StatusCode.OK,
+        mapEditEventToRes(event)
+      );
     } catch (error) {
       next(error);
     }
