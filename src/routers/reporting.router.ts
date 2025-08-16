@@ -25,7 +25,7 @@ class ReportingRouter {
   private initializeRouter = (): void => {
     this.route.use(verifyToken); //semua yang perlu verifyToken dibawah sini
     this.route.get("/reporting/:slug", this.reportingController.reporting);
-    this.route.get("/all", this.reportingController.reportingAll);
+    this.route.get("/all", this.reportingController.reportingAll); // Data mingguan
   };
 
   public getRouter = () => {

@@ -126,24 +126,32 @@ class ReportingController {
           return rev + subtotal;
         }, 0);
 
-        // === Tambah chartData per tanggal ===
+        // === Tambah chartData per minggu ===
         const chartMap: Record<string, number> = {};
 
         event.transactions.forEach((tx) => {
-          const dateKey = new Date(tx.createdAt).toISOString().split("T")[0]; // yyyy-mm-dd
+          const date = new Date(tx.createdAt);
+          
+          // Hitung minggu ke berapa dalam tahun
+          const startOfYear = new Date(date.getFullYear(), 0, 1);
+          const daysSinceStartOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+          const weekNumber = Math.ceil((daysSinceStartOfYear + startOfYear.getDay() + 1) / 7);
+          
+          const weekKey = `${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`; // format: 2024-W15
+          
           const quantity = tx.orderItems.reduce(
             (sum, item) => sum + item.quantity,
             0
           );
 
-          if (!chartMap[dateKey]) {
-            chartMap[dateKey] = 0;
+          if (!chartMap[weekKey]) {
+            chartMap[weekKey] = 0;
           }
-          chartMap[dateKey] += quantity;
+          chartMap[weekKey] += quantity;
         });
 
-        const chartData = Object.entries(chartMap).map(([date, sales]) => ({
-          date,
+        const chartData = Object.entries(chartMap).map(([week, sales]) => ({
+          week,
           sales,
         }));
 
