@@ -1,13 +1,9 @@
 import App from "./app";
-import dotenv from "dotenv";
-dotenv.config();
 
-const app = new App();
+const PORT: string = process.env.PORT || "8181";
+const appInstance = new App();
+const app = appInstance.app;
 
-// For Vercel serverless deployment
-export default app.app;
-
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-  app.start();
-}
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});

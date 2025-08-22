@@ -4,5 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("../src/app"));
-const app = new app_1.default();
-exports.default = app.app;
+// Membuat instance dari App
+const appInstance = new app_1.default();
+// Mengekspor instance Express app untuk Vercel
+const app = appInstance.app;
+exports.default = app;

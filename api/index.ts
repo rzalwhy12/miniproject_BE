@@ -1,4 +1,9 @@
 import App from "../src/app";
+import { Application } from "express";
 
-const app = new App();
-export default app.app;
+// Membuat instance dari App
+const appInstance = new App();
+
+// Mengekspor instance Express app untuk Vercel
+const app: Application = appInstance.app;
+export default app;
