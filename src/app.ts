@@ -32,7 +32,7 @@ class App {
   private configure = (): void => {
     // Configure CORS for production
     this.app.use(cors({
-      origin: process.env.BASIC_URL_FE || "*",
+      origin: process.env.BASIC_URL_FE || "http://localhost:3000",
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"]
