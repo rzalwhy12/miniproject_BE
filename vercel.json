@@ -2,19 +2,20 @@
     "version": 2,
     "builds": [
         {
-            "src": "src/index.ts",
+            "src": "dist/index.js",
             "use": "@vercel/node",
             "config": {
                 "buildCommand": "npm run build",
                 "installCommand": "npm install",
-                "nodeVersion": "20.x"
+                "nodeVersion": "20.x",
+                "includeFiles": ["dist/**"]
             }
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "src/index.ts"
+            "dest": "dist/index.js"
         }
     ]
 }
