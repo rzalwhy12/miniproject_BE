@@ -7,7 +7,7 @@
             "config": {
                 "buildCommand": "npm run build",
                 "installCommand": "npm install",
-                "nodeVersion": "18.x"
+                "nodeVersion": "20.x"
             }
         }
     ],
