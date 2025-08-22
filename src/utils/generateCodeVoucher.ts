@@ -1,7 +1,18 @@
-import { customAlphabet } from "nanoid";
+import { randomBytes } from "crypto";
 import { prisma } from "../config/prisma";
 
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 6);
+// Generate voucher code using crypto
+const generateCode = (length: number = 6): string => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  const bytes = randomBytes(length);
+  
+  for (let i = 0; i < length; i++) {
+    result += chars[bytes[i] % chars.length];
+  }
+  
+  return result;
+};
 
 //funct generate Voucher
 export const generateVoucherCode = async () => {
@@ -9,7 +20,7 @@ export const generateVoucherCode = async () => {
   let exists = true;
 
   do {
-    code = nanoid();
+    code = generateCode();
     const existingVoucher = await prisma.voucher.findUnique({
       where: { code },
     });
