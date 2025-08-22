@@ -8,7 +8,9 @@
     "dev": "nodemon src/index.ts",
     "seed": "ts-node prisma/seed.ts",
     "migrate": "npx prisma migrate dev --name",
-    "reset": "prisma migrate reset"
+    "reset": "prisma migrate reset",
+    "build": "npx prisma generate && tsc",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
