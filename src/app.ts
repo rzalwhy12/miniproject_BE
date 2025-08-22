@@ -17,7 +17,8 @@ import VoucherRouter from "./routers/voucher.router";
 import TicketRouter from "./routers/ticket.router";
 import ReportingRouter from "./routers/reporting.router";
 
-const PORT: string = process.env.PORT || "8181";
+// Hapus bagian ini karena tidak dibutuhkan lagi di Vercel
+// const PORT: string = process.env.PORT || "8181";
 
 class App {
   public app: Application;
@@ -32,7 +33,7 @@ class App {
   private configure = (): void => {
     // Configure CORS for production
     this.app.use(cors({
-      origin: process.env.BASIC_URL_FE || "http://localhost:3000",
+      origin: process.env.BASIC_URL_FE && "http://localhost:3000",
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"]
@@ -49,6 +50,7 @@ class App {
   };
 
   private route = (): void => {
+    // ... (routing logic tetap sama)
     const authrouter: AuthRouter = new AuthRouter();
     const accountRouter: AccountRouter = new AccountRouter();
     const eventRouter: EventRouter = new EventRouter();
@@ -62,7 +64,7 @@ class App {
       res.status(200).send("<h1>Test Tiket Backend</h1>");
     });
 
-    this.app.use("/auth", authrouter.getRouter()); //jangan lupa tanda kurung buat jalanin methodnya
+    this.app.use("/auth", authrouter.getRouter()); 
     this.app.use("/account", accountRouter.getRouter());
     this.app.use("/event", eventRouter.getRouter());
     this.app.use("/transaction", transaction.getRouter());
@@ -77,6 +79,7 @@ class App {
   };
 
   private errorHandler = (): void => {
+    // ... (error handler logic tetap sama)
     this.app.use(
       (error: unknown, req: Request, res: Response, next: NextFunction) => {
         if (error instanceof AppError) {
@@ -87,7 +90,6 @@ class App {
             },
           });
         }
-        //error handle unutk prisam uniqie
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
             const target = error.meta?.target as string[];
@@ -100,7 +102,6 @@ class App {
             });
           }
         }
-        //error handle unutk TokenExiperd
         if (error instanceof TokenExpiredError) {
           return res.status(StatusCode.UNAUTHORIZED).json({
             result: {
@@ -109,7 +110,6 @@ class App {
             },
           });
         }
-        // error unutk cloudinary upload
         if (
           error instanceof Error &&
           error.name === "Error" &&
@@ -134,14 +134,6 @@ class App {
         });
       }
     );
-  };
-  public start = (): void => {
-    // Only start server in development
-    if (process.env.NODE_ENV !== 'production') {
-      this.app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
-      });
-    }
   };
 }
 
