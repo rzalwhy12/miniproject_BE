@@ -1,7 +1,7 @@
-import { customAlphabet } from "nanoid";
+import { nanoid } from 'nanoid';
 import { prisma } from "../config/prisma";
 
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8);
+const generateCustomId = () => nanoid(8).toUpperCase();
 
 //funct generate referal
 export const generateReferralCode = async () => {
@@ -9,7 +9,7 @@ export const generateReferralCode = async () => {
   let exists = true;
 
   do {
-    code = nanoid();
+    code = generateCustomId();
     const existingUser = await prisma.user.findUnique({
       where: { referralCode: code },
     });
