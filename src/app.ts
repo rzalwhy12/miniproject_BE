@@ -34,7 +34,7 @@ class App {
     // Configure CORS for production
     this.app.use(cors({
       origin: process.env.BASIC_URL_FE && "http://localhost:3000",
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"]
     }));
