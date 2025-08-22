@@ -1,9 +1,12 @@
 import App from "./app";
 
-const main = () => {
-  const server = new App();
+// Create instance of App
+const app = new App();
 
-  server.start();
-};
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.start();
+}
 
-main();
+// Export Express instance for Vercel
+export default app.app;

@@ -30,8 +30,22 @@ class App {
   }
 
   private configure = (): void => {
-    this.app.use(cors());
+    // Configure CORS for production
+    this.app.use(cors({
+      origin: process.env.BASIC_URL_FE || "*",
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      credentials: true,
+      allowedHeaders: ["Content-Type", "Authorization"]
+    }));
     this.app.use(express.json());
+    
+    // Add security headers
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("X-Frame-Options", "DENY");
+      res.setHeader("X-XSS-Protection", "1; mode=block");
+      next();
+    });
   };
 
   private route = (): void => {
@@ -122,9 +136,12 @@ class App {
     );
   };
   public start = (): void => {
-    this.app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-    });
+    // Only start server in development
+    if (process.env.NODE_ENV !== 'production') {
+      this.app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+      });
+    }
   };
 }
 
