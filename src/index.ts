@@ -3,4 +3,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = new App();
-app.start();
+
+// For Vercel serverless deployment
+export default app.app;
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.start();
+}
