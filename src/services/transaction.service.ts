@@ -9,6 +9,9 @@ import { prisma } from "../config/prisma";
 import { rejectPaymentProofTemplate } from "../template/sendTicketReject.template";
 
 class TransactionService {
+  public fetchTransactionsByUserId = async (userId: number) => {
+    return await this.transactionRepository.getTransactionsByUserId(userId);
+  };
   public getTransactionByCode = async (transactionCode: string) => {
     return await this.transactionRepository.getTransactionByCode(transactionCode);
   };

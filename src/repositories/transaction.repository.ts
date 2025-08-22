@@ -25,6 +25,20 @@ class TransactionRepository {
       },
     });
   };
+    public getTransactionsByUserId = async (userId: number) => {
+      return await prisma.transaction.findMany({
+        where: { customerId: userId },
+        include: {
+          user: true,
+          event: true,
+          orderItems: {
+            include: {
+              ticketType: true,
+            },
+          },
+        },
+      });
+    };
   public createTransaction = async (
     customerId: number,
     data: ITransactionCreate,

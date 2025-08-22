@@ -12,6 +12,22 @@ import { UploadApiResponse } from "cloudinary";
 import { mapOrderListToRes } from "../mappers/transaction.mapper";
 
 class TransactionController {
+  public getTransactionsByUserIdController = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = res.locals.decript.id;
+      if (!userId) {
+        throw new AppError(ErrorMsg.UNAUTHORIZED, StatusCode.UNAUTHORIZED);
+      }
+      const transactions = await this.transactionService.fetchTransactionsByUserId(userId);
+      sendResSuccess(res, SuccessMsg.OK, StatusCode.OK, transactions);
+    } catch (error) {
+      next(error);
+    }
+  };
   public getTransactionByCode = async (
     req: Request,
     res: Response,

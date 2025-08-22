@@ -29,6 +29,10 @@ class TransactionRouter {
       this.transactionController.getTransactionOrder
     );
     this.route.get(
+      "/user-transactions",
+      this.transactionController.getTransactionsByUserIdController
+    );
+    this.route.get(
       "/:transactionCode",
       this.transactionController.getTransactionByCode
     );
