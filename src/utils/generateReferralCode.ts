@@ -1,7 +1,9 @@
-import { nanoid } from 'nanoid';
+import { randomBytes } from 'crypto';
 import { prisma } from "../config/prisma";
 
-const generateCustomId = () => nanoid(8).toUpperCase();
+const generateCustomId = () => {
+  return randomBytes(4).toString('hex').toUpperCase();
+};
 
 //funct generate referal
 export const generateReferralCode = async () => {

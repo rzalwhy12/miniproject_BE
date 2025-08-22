@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateReferralCode = void 0;
-const nanoid_1 = require("nanoid");
+const crypto_1 = require("crypto");
 const prisma_1 = require("../config/prisma");
-const generateCustomId = () => (0, nanoid_1.nanoid)(8).toUpperCase();
+const generateCustomId = () => {
+    return (0, crypto_1.randomBytes)(4).toString('hex').toUpperCase();
+};
 //funct generate referal
 const generateReferralCode = async () => {
     let code;
